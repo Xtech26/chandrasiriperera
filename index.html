@@ -16,6 +16,9 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
+    <!-- PeerJS for Cross-Device Real-Time Direct Messaging -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
     <!-- Firebase JS SDK (Compat Mode for single HTML setup) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
@@ -135,20 +138,20 @@
                 <!-- Account Status / Logged In Indicator -->
                 <div id="userStatusBox" class="hidden items-center space-x-2 bg-slate-900 border border-amber-500/30 px-3 py-1.5 rounded-xl">
                     <i class="fa-solid fa-user-shield text-amber-400 text-xs"></i>
-                    <span id="loggedInName" class="text-xs font-bold text-slate-200">the owner</span>
+                    <span id="loggedInName" class="text-xs font-bold text-slate-200">Guest</span>
                     <button onclick="logout()" class="text-[10px] text-rose-400 hover:underline ml-1">(Logout)</button>
                 </div>
 
-                <button onclick="openLoginModal()" id="loginBtn" class="inline-flex items-center text-xs font-semibold text-slate-300 hover:text-white transition px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                <button onclick="openModal('loginModal')" id="loginBtn" class="inline-flex items-center text-xs font-semibold text-slate-300 hover:text-white transition px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800">
                     <i class="fa-solid fa-right-to-bracket mr-1.5 text-blue-400"></i> Log In
                 </button>
 
-                <button onclick="openSubscriptionModal()" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs sm:text-sm font-black px-3.5 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/20 flex items-center space-x-1.5">
+                <button onclick="openModal('subscriptionModal')" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs sm:text-sm font-black px-3.5 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/20 flex items-center space-x-1.5">
                     <i class="fa-solid fa-bolt"></i>
                     <span>Pro ($1/mo)</span>
                 </button>
 
-                <button onclick="openProModal()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-blue-600/25 flex items-center space-x-2 border border-blue-400/20">
+                <button onclick="openModal('proModal')" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-blue-600/25 flex items-center space-x-2 border border-blue-400/20">
                     <i class="fa-solid fa-user-plus"></i>
                     <span class="hidden sm:inline">Register Helper</span>
                 </button>
@@ -162,7 +165,7 @@
             
             <div class="inline-flex items-center space-x-2 bg-amber-500/10 border border-amber-500/20 px-3.5 py-1.5 rounded-full text-amber-400 text-xs font-semibold mb-4 backdrop-blur-md">
                 <i class="fa-solid fa-crown text-amber-400 text-xs"></i>
-                <span>PRO Membership Active — Live Real-Time Chat & Inbox Enabled</span>
+                <span>PRO Network Active — Real-Time Cross-Device Chat Connected</span>
             </div>
 
             <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-4 tracking-tight leading-tight">
@@ -233,7 +236,6 @@
     <div id="inboxModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
         <div class="glass-panel border border-slate-800 rounded-3xl max-w-lg w-full h-[550px] flex flex-col relative shadow-2xl my-auto overflow-hidden">
             
-            <!-- Inbox Header -->
             <div class="p-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <div class="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center">
@@ -249,14 +251,12 @@
                 </button>
             </div>
 
-            <!-- Inbox Thread List -->
             <div id="inboxThreadList" class="flex-grow p-4 space-y-2 overflow-y-auto chat-scroll">
                 <!-- Thread Items Render Dynamically -->
             </div>
 
-            <!-- Inbox Footer -->
             <div class="p-3 bg-slate-900/90 border-t border-slate-800 text-center">
-                <p class="text-[11px] text-slate-400"><i class="fa-solid fa-bolt text-amber-400 mr-1"></i> Messages update live across windows & devices.</p>
+                <p class="text-[11px] text-slate-400"><i class="fa-solid fa-bolt text-amber-400 mr-1"></i> Messages update live across tabs & peer connections.</p>
             </div>
         </div>
     </div>
@@ -297,7 +297,7 @@
                             <option value="Plumbing">Plumbing</option>
                             <option value="Electrical">Electrical</option>
                             <option value="AC Repair">AC Repair</option>
-                            <option value="Tech Fix">Tech Setup</option>
+                            <option value="Tech Setup">Tech Setup</option>
                         </select>
                     </div>
                     <div>
@@ -313,7 +313,7 @@
 
                 <div>
                     <label class="block font-semibold text-slate-300 mb-1">Profile Avatar Link (URL)</label>
-                    <input type="url" id="regImg" required placeholder="https://images.unsplash.com/..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                    <input type="url" id="regImg" required placeholder="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
                 </div>
 
                 <div>
@@ -436,7 +436,7 @@
 
     <!-- Application Logic & Real-time Chat Engine -->
     <script>
-        // FIREBASE CONFIGURATION (REPLACE WITH YOUR FREE FIREBASE PROJECT KEYS FOR GLOBAL CROSS-DEVICE CHAT)
+        // FIREBASE CONFIGURATION (REPLACE WITH YOUR FREE FIREBASE PROJECT KEYS IF DESIRED)
         const firebaseConfig = {
             apiKey: "OPTIONAL_FIREBASE_API_KEY",
             authDomain: "myhelper-app.firebaseapp.com",
@@ -465,7 +465,7 @@
         
         // DEFAULT DEMO OWNER ACCOUNT WITH MANY JOBS
         const ownerDemoAccount = {
-            id: 999001,
+            id: "999001",
             name: "the owner",
             password: "@owerguy67",
             category: "Master Pro / Multi-Trade",
@@ -486,17 +486,48 @@
             ]
         };
 
+        // Initialize Local Storage state
         let pros = JSON.parse(localStorage.getItem('myhelper_map_pros')) || [];
         
-        // Ensure Owner Account is always present
-        if (!pros.some(p => p.name.toLowerCase() === 'the owner')) {
+        // Ensure Owner Account is always present in pros list
+        if (!pros.some(p => String(p.name).toLowerCase() === 'the owner')) {
             pros.unshift(ownerDemoAccount);
             localStorage.setItem('myhelper_map_pros', JSON.stringify(pros));
         }
 
-        let currentUser = JSON.parse(localStorage.getItem('myhelper_current_user')) || { name: 'Client Guest', id: 'guest_user' };
+        let currentUser = JSON.parse(localStorage.getItem('myhelper_current_user')) || { 
+            name: 'Client Guest', 
+            id: 'guest_' + Math.random().toString(36).substr(2, 6) 
+        };
+
         let activeChatPartner = null;
         let map, markersGroup;
+        let peer = null;
+        let peerConn = null;
+
+        // PeerJS P2P Connection Engine
+        function initPeerEngine() {
+            const sanitizedPeerId = ('myhelper-' + currentUser.name.toLowerCase().replace(/[^a-z0-9]/g, '')).substr(0, 30);
+            try {
+                peer = new Peer(sanitizedPeerId, {
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' }
+                        ]
+                    }
+                });
+
+                peer.on('connection', (conn) => {
+                    peerConn = conn;
+                    peerConn.on('data', (data) => {
+                        receiveIncomingMessage(data);
+                    });
+                });
+            } catch (err) {
+                console.log("PeerJS fallback mode active.");
+            }
+        }
 
         // Initialize Map
         function initMap() {
@@ -530,479 +561,496 @@
 
                 const marker = L.marker([p.lat, p.lng], { icon: customIcon });
                 marker.bindPopup(`
-                    <div class="p-1 text-center font-sans">
+                    <div class="p-2 text-center font-sans">
                         <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover mx-auto mb-2 border border-slate-700">
                         <h4 class="font-bold text-sm text-white">${p.name} ${p.isPro ? '👑' : ''}</h4>
-                        <p class="text-[10px] text-amber-400 font-bold uppercase mb-2">${p.category} — $${p.rate}/hr</p>
-                        <button onclick="openChatModal('${p.name}')" class="inline-block bg-blue-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg">Chat Live</button>
+                        <p class="text-xs text-blue-400 font-semibold mb-2">${p.category}</p>
+                        <button onclick="openChatWithPro('${p.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg w-full transition">Chat Live</button>
                     </div>
                 `);
-
                 markersGroup.addLayer(marker);
             });
         }
 
-        function renderPros(dataList = pros) {
+        // Render Cards in Directory Grid
+        function renderProsGrid(dataList) {
             const grid = document.getElementById('proGrid');
-            const countLabel = document.getElementById('activeCount');
+            const activeCount = document.getElementById('activeCount');
             grid.innerHTML = '';
-            countLabel.innerText = `${dataList.length} Active`;
+            activeCount.innerText = `${dataList.length} Active`;
 
             if (dataList.length === 0) {
                 grid.innerHTML = `
-                    <div class="col-span-full text-center py-12 px-4 glass-card rounded-3xl border border-dashed border-slate-800">
-                        <i class="fa-solid fa-user-slash text-3xl text-slate-500 mb-3"></i>
-                        <h3 class="text-base font-bold text-white mb-1">No Helpers Found</h3>
-                        <p class="text-xs text-slate-400 mb-4 max-w-xs mx-auto">Try clearing your search query or register as a helper.</p>
-                        <button onclick="openProModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition">Become a Helper</button>
+                    <div class="col-span-full glass-card p-8 text-center rounded-2xl">
+                        <i class="fa-solid fa-user-slash text-3xl text-slate-600 mb-2"></i>
+                        <p class="text-slate-400 text-sm">No local helpers match your search filters.</p>
                     </div>
                 `;
-                updateMapMarkers([]);
                 return;
             }
 
             dataList.forEach(p => {
-                const jobBadges = (p.jobs && p.jobs.length > 0) 
-                    ? p.jobs.map(j => `<span class="bg-slate-900 border border-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-md">${j}</span>`).join(' ')
-                    : `<span class="text-[10px] text-slate-500 italic">General Service</span>`;
+                const jobBadges = (p.jobs || ['General Repair']).map(j => 
+                    `<span class="bg-slate-900 border border-slate-800 text-slate-300 text-[10px] font-medium px-2 py-0.5 rounded-md">${j}</span>`
+                ).join('');
 
-                grid.innerHTML += `
-                    <div class="glass-card rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 ${p.isPro ? 'border-amber-500/30' : ''}">
+                const proBadge = p.isPro ? `<span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black px-2 py-0.5 rounded-md">👑 PRO</span>` : '';
+
+                const cardHtml = `
+                    <div class="glass-card p-5 rounded-2xl flex flex-col justify-between space-y-4 transition">
                         <div>
-                            <div class="flex items-center space-x-3 mb-3">
-                                <img src="${p.img}" class="w-11 h-11 rounded-xl object-cover border border-slate-700" onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'">
-                                <div class="overflow-hidden">
-                                    <div class="flex items-center space-x-1">
-                                        <span class="bg-blue-500/10 text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-blue-500/20">${p.category}</span>
-                                        ${p.isPro ? '<span class="bg-amber-500/10 text-amber-400 text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase border border-amber-500/30">PRO</span>' : ''}
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover border border-slate-700">
+                                    <div>
+                                        <div class="flex items-center space-x-1.5">
+                                            <h3 class="font-extrabold text-white text-sm">${p.name}</h3>
+                                            ${proBadge}
+                                        </div>
+                                        <p class="text-xs text-blue-400 font-semibold">${p.category}</p>
                                     </div>
-                                    <h3 class="text-sm font-bold text-white mt-0.5 truncate flex items-center">
-                                        ${p.name}
-                                        ${p.isPro ? '<i class="fa-solid fa-crown text-amber-400 ml-1 text-xs"></i>' : ''}
-                                    </h3>
                                 </div>
+                                <span class="text-sm font-black text-emerald-400">$${p.rate}<span class="text-[10px] text-slate-400 font-normal">/hr</span></span>
                             </div>
-                            
-                            <p class="text-slate-300 text-xs leading-relaxed mb-3 line-clamp-2">${p.bio}</p>
 
-                            <div class="mb-4">
-                                <span class="text-[9px] font-bold uppercase text-slate-400 block mb-1">Jobs Offered:</span>
-                                <div class="flex flex-wrap gap-1 max-h-16 overflow-y-auto">
-                                    ${jobBadges}
-                                </div>
+                            <p class="text-xs text-slate-300 mt-3 line-clamp-2">${p.bio}</p>
+
+                            <div class="flex flex-wrap gap-1 mt-3">
+                                ${jobBadges}
                             </div>
                         </div>
 
-                        <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                            <div>
-                                <span class="text-[9px] text-slate-500 uppercase font-semibold">Hourly</span>
-                                <div class="text-xs font-black text-white">$${p.rate}/hr</div>
-                            </div>
-                            
-                            <div class="flex space-x-1.5">
-                                <button onclick="focusMapOnPro(${p.lat}, ${p.lng})" title="Locate on map" class="bg-slate-900 hover:bg-slate-800 text-blue-400 text-[11px] font-semibold px-2 py-2 rounded-xl border border-slate-800 transition">
-                                    <i class="fa-solid fa-crosshairs"></i>
-                                </button>
-                                <button onclick="downloadAccountTxt(${p.id})" title="Download Account TXT" class="bg-slate-900 hover:bg-slate-800 text-emerald-400 text-[11px] font-semibold px-2 py-2 rounded-xl border border-slate-800 transition">
-                                    <i class="fa-solid fa-file-lines"></i>
-                                </button>
-                                <button onclick="openChatModal('${p.name}')" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold px-3 py-2 rounded-xl transition flex items-center space-x-1">
-                                    <i class="fa-solid fa-comments text-[10px]"></i>
-                                    <span>Chat</span>
-                                </button>
-                            </div>
+                        <div class="pt-2 border-t border-slate-800/80 flex items-center gap-2">
+                            <button onclick="openChatWithPro('${p.id}')" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2 rounded-xl transition flex items-center justify-center space-x-1.5">
+                                <i class="fa-solid fa-comments"></i>
+                                <span>Chat</span>
+                            </button>
+                            <button onclick="locateOnMap(${p.lat}, ${p.lng})" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 text-slate-300 text-xs py-2 px-3 rounded-xl transition">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </button>
                         </div>
                     </div>
                 `;
-            });
-
-            updateMapMarkers(dataList);
-        }
-
-        // REAL-TIME MESSAGING ENGINE & INBOX MANAGEMENT
-        function getRoomId(userA, userB) {
-            return [userA.toLowerCase().trim(), userB.toLowerCase().trim()].sort().join('_vs_');
-        }
-
-        function openChatModal(partnerName) {
-            const partner = pros.find(p => p.name.toLowerCase() === partnerName.toLowerCase()) || {
-                name: partnerName,
-                category: 'Client / Helper',
-                img: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
-            };
-
-            activeChatPartner = partner;
-            document.getElementById('chatName').innerText = partner.name;
-            document.getElementById('chatCategory').innerText = partner.category || 'User';
-            document.getElementById('chatAvatar').src = partner.img;
-
-            renderChatMessages();
-            document.getElementById('chatModal').classList.remove('hidden');
-            document.getElementById('chatModal').classList.add('flex');
-            
-            closeModal('inboxModal');
-        }
-
-        function renderChatMessages() {
-            if (!activeChatPartner) return;
-            const messagesContainer = document.getElementById('chatMessages');
-            messagesContainer.innerHTML = '';
-
-            const roomId = getRoomId(currentUser.name, activeChatPartner.name);
-            const allStore = JSON.parse(localStorage.getItem('myhelper_realtime_chats')) || {};
-            const roomMessages = allStore[roomId] || [];
-
-            if (roomMessages.length === 0) {
-                messagesContainer.innerHTML = `
-                    <div class="text-center py-8 text-slate-500 text-xs">
-                        <i class="fa-regular fa-paper-plane text-2xl mb-2 text-slate-600 block"></i>
-                        No messages yet. Send a message to start chatting in real-time!
-                    </div>
-                `;
-            } else {
-                roomMessages.forEach(msg => {
-                    const isMe = msg.sender.toLowerCase() === currentUser.name.toLowerCase();
-                    const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                    messagesContainer.innerHTML += `
-                        <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
-                            <div class="${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'} max-w-[80%] p-3 rounded-2xl shadow-sm">
-                                <div class="text-[9px] opacity-75 font-semibold mb-1 flex justify-between items-center space-x-2">
-                                    <span>${isMe ? 'You' : msg.sender}</span>
-                                    <span>${timeStr}</span>
-                                </div>
-                                <p class="text-xs leading-relaxed">${msg.text}</p>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        function sendChatMessage(e) {
-            e.preventDefault();
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if (!text || !activeChatPartner) return;
-
-            const roomId = getRoomId(currentUser.name, activeChatPartner.name);
-            const msgObj = {
-                sender: currentUser.name,
-                recipient: activeChatPartner.name,
-                text: text,
-                timestamp: Date.now()
-            };
-
-            // Save locally
-            const allStore = JSON.parse(localStorage.getItem('myhelper_realtime_chats')) || {};
-            if (!allStore[roomId]) allStore[roomId] = [];
-            allStore[roomId].push(msgObj);
-            localStorage.setItem('myhelper_realtime_chats', JSON.stringify(allStore));
-
-            // Sync via BroadcastChannel to other windows/tabs instantly
-            chatChannel.postMessage({ type: 'NEW_MESSAGE', room: roomId, msg: msgObj });
-
-            // Sync via Firebase if configured
-            if (useFirebase) {
-                firebase.database().ref(`chats/${roomId}`).push(msgObj);
-            }
-
-            input.value = '';
-            renderChatMessages();
-            updateInboxUI();
-        }
-
-        // Listen for incoming live messages from other tabs/windows
-        chatChannel.onmessage = (event) => {
-            if (event.data && event.data.type === 'NEW_MESSAGE') {
-                const { room, msg } = event.data;
-                
-                // Save locally in receiving window
-                const allStore = JSON.parse(localStorage.getItem('myhelper_realtime_chats')) || {};
-                if (!allStore[room]) allStore[room] = [];
-                
-                // Avoid duplicating if already present
-                if (!allStore[room].some(m => m.timestamp === msg.timestamp && m.sender === msg.sender)) {
-                    allStore[room].push(msg);
-                    localStorage.setItem('myhelper_realtime_chats', JSON.stringify(allStore));
-                }
-
-                // If chat modal is currently open with this sender, update view instantly
-                if (activeChatPartner && getRoomId(currentUser.name, activeChatPartner.name) === room) {
-                    renderChatMessages();
-                }
-
-                updateInboxUI();
-            }
-        };
-
-        // OPEN INBOX MODAL
-        function openInboxModal() {
-            updateInboxUI();
-            document.getElementById('inboxModal').classList.remove('hidden');
-            document.getElementById('inboxModal').classList.add('flex');
-        }
-
-        function updateInboxUI() {
-            const listContainer = document.getElementById('inboxThreadList');
-            const badge = document.getElementById('inboxCountBadge');
-            listContainer.innerHTML = '';
-
-            const allStore = JSON.parse(localStorage.getItem('myhelper_realtime_chats')) || {};
-            const rooms = Object.keys(allStore);
-
-            // Filter rooms relevant to current user
-            const myRooms = rooms.filter(r => r.includes(currentUser.name.toLowerCase().trim()));
-
-            badge.innerText = myRooms.length;
-            if (myRooms.length > 0) {
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-
-            if (myRooms.length === 0) {
-                listContainer.innerHTML = `
-                    <div class="text-center py-12 text-slate-500">
-                        <i class="fa-solid fa-inbox text-3xl mb-2 text-slate-600 block"></i>
-                        <p class="text-xs font-semibold">Your inbox is empty.</p>
-                        <p class="text-[10px] text-slate-500 mt-1">Start a conversation with any helper from the directory!</p>
-                    </div>
-                `;
-                return;
-            }
-
-            myRooms.forEach(room => {
-                const messages = allStore[room];
-                const lastMsg = messages[messages.length - 1];
-                
-                // Determine partner name
-                const names = room.split('_vs_');
-                const partnerNameRaw = names.find(n => n !== currentUser.name.toLowerCase().trim()) || names[0];
-                const partnerObj = pros.find(p => p.name.toLowerCase() === partnerNameRaw) || { name: partnerNameRaw, img: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150', category: 'User' };
-
-                const timeAgo = lastMsg ? new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-
-                listContainer.innerHTML += `
-                    <div onclick="openChatModal('${partnerObj.name}')" class="p-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-blue-500/40 cursor-pointer transition flex items-center justify-between group">
-                        <div class="flex items-center space-x-3 overflow-hidden">
-                            <img src="${partnerObj.img}" class="w-10 h-10 rounded-xl object-cover border border-slate-700 flex-shrink-0">
-                            <div class="overflow-hidden">
-                                <div class="flex items-center justify-between">
-                                    <h4 class="text-xs font-bold text-white truncate group-hover:text-blue-400 transition">${partnerObj.name}</h4>
-                                </div>
-                                <p class="text-[11px] text-slate-400 truncate mt-0.5">${lastMsg ? `${lastMsg.sender === currentUser.name ? 'You: ' : ''}${lastMsg.text}` : 'No messages'}</p>
-                            </div>
-                        </div>
-                        <div class="text-right flex-shrink-0 ml-2">
-                            <span class="text-[9px] text-slate-500 block">${timeAgo}</span>
-                            <span class="inline-block mt-1 text-[10px] text-blue-400 font-semibold group-hover:translate-x-0.5 transition">Open <i class="fa-solid fa-chevron-right text-[8px]"></i></span>
-                        </div>
-                    </div>
-                `;
+                grid.innerHTML += cardHtml;
             });
         }
 
-        // ACCOUNT DOWNLOAD AS .TXT FILE
-        function downloadAccountTxt(proId) {
-            const pro = pros.find(p => p.id === proId);
-            if (!pro) return;
-
-            const jobsList = (pro.jobs && pro.jobs.length > 0) ? pro.jobs.join(', ') : 'General Services';
-
-            const textData = 
-`==============================================
-         MYHELPER OFFICIAL ACCOUNT FILE        
-==============================================
-Account ID:     ${pro.id}
-Full Name:      ${pro.name}
-PRO Status:     ${pro.isPro ? 'SUBSCRIBED PRO ($1/mo)' : 'STANDARD'}
-Category:       ${pro.category}
-Hourly Rate:    $${pro.rate}/hr
-Phone Number:   ${pro.phone}
-Jobs Offered:   ${jobsList}
-Bio / Overview: ${pro.bio}
-Created Date:   ${new Date().toLocaleString()}
-==============================================
-Keep this file on your device for account records!`;
-
-            const blob = new Blob([textData], { type: 'text/plain' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `myhelper_account_${pro.name.replace(/\s+/g, '_')}.txt`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function handleRegistration(e) {
-            e.preventDefault();
-            const randomLat = defaultCenter[0] + (Math.random() - 0.5) * 0.08;
-            const randomLng = defaultCenter[1] + (Math.random() - 0.5) * 0.08;
-
-            const jobsInput = document.getElementById('regJobs').value;
-            const jobsArray = jobsInput.split(',').map(j => j.trim()).filter(j => j.length > 0);
-
-            const newPro = {
-                id: Date.now(),
-                name: document.getElementById('regName').value,
-                password: document.getElementById('regPassword').value,
-                category: document.getElementById('regCategory').value,
-                rate: document.getElementById('regRate').value,
-                phone: document.getElementById('regPhone').value,
-                img: document.getElementById('regImg').value,
-                bio: document.getElementById('regBio').value,
-                jobs: jobsArray,
-                lat: randomLat,
-                lng: randomLng,
-                isPro: false,
-                icon: "fa-hand-holding-hand"
-            };
-
-            pros.unshift(newPro);
-            localStorage.setItem('myhelper_map_pros', JSON.stringify(pros));
-            
-            currentUser = newPro;
-            localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
-            updateUserUI();
-
-            renderPros();
-            focusMapOnPro(randomLat, randomLng);
-            closeModal('proModal');
-
-            downloadAccountTxt(newPro.id);
-            alert(`Account created successfully!\n\nYour backup file (myhelper_account_${newPro.name}.txt) has been downloaded.`);
-        }
-
-        function handleLogin(e) {
-            e.preventDefault();
-            const userVal = document.getElementById('loginUser').value.trim();
-            const passVal = document.getElementById('loginPass').value.trim();
-
-            const found = pros.find(p => p.name.toLowerCase() === userVal.toLowerCase() && p.password === passVal);
-
-            if (found) {
-                currentUser = found;
-                localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
-                updateUserUI();
-                closeModal('loginModal');
-                updateInboxUI();
-                alert(`Welcome back, ${found.name}! You are now logged in.`);
-            } else {
-                alert('Invalid Username or Password. Use "the owner" and "@owerguy67" for owner demo.');
-            }
-        }
-
-        function logout() {
-            currentUser = { name: 'Client Guest', id: 'guest_user' };
-            localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
-            updateUserUI();
-            updateInboxUI();
-            alert('Logged out successfully.');
-        }
-
-        function updateUserUI() {
-            const statusBox = document.getElementById('userStatusBox');
-            const loginBtn = document.getElementById('loginBtn');
-            const loggedInName = document.getElementById('loggedInName');
-
-            if (currentUser && currentUser.name !== 'Client Guest') {
-                statusBox.classList.remove('hidden');
-                statusBox.classList.add('flex');
-                loginBtn.classList.add('hidden');
-                loggedInName.innerText = currentUser.name;
-            } else {
-                statusBox.classList.add('hidden');
-                statusBox.classList.remove('flex');
-                loginBtn.classList.remove('hidden');
-            }
-        }
-
-        function processProSubscription() {
-            if (!currentUser || currentUser.name === 'Client Guest') {
-                alert('Please log in or register an account first before subscribing to Pro!');
-                closeModal('subscriptionModal');
-                openLoginModal();
-                return;
-            }
-
-            const proIndex = pros.findIndex(p => p.id === currentUser.id);
-            if (proIndex !== -1) {
-                pros[proIndex].isPro = true;
-                currentUser.isPro = true;
-                localStorage.setItem('myhelper_map_pros', JSON.stringify(pros));
-                localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
-            }
-
-            renderPros();
-            closeModal('subscriptionModal');
-            alert(`🎉 Success! Your account (${currentUser.name}) is upgraded to PRO Status for $1/month!`);
-        }
-
-        function focusMapOnPro(lat, lng) {
-            if (!map) return;
-            map.flyTo([lat, lng], 15, { duration: 1.5 });
-        }
-
-        function resetMapView() {
-            if (!map) return;
-            map.flyTo(defaultCenter, 12);
-        }
-
+        // Navigation & Filtering Logic
         function filterPros() {
             const query = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = pros.filter(p => {
-                const nameMatch = p.name.toLowerCase().includes(query);
-                const catMatch = p.category.toLowerCase().includes(query);
-                const bioMatch = p.bio.toLowerCase().includes(query);
-                const jobMatch = p.jobs && p.jobs.some(j => j.toLowerCase().includes(query));
-                return nameMatch || catMatch || bioMatch || jobMatch;
-            });
-            renderPros(filtered);
+            const filtered = pros.filter(p => 
+                p.name.toLowerCase().includes(query) ||
+                p.category.toLowerCase().includes(query) ||
+                (p.jobs && p.jobs.some(j => j.toLowerCase().includes(query)))
+            );
+            renderProsGrid(filtered);
+            updateMapMarkers(filtered);
         }
 
         function filterByCategory(cat) {
+            document.querySelectorAll('.cat-pill').forEach(btn => {
+                btn.className = 'cat-pill bg-slate-900 border border-slate-800 text-slate-300 hover:border-blue-500/50 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition';
+            });
+            event.target.className = 'cat-pill bg-blue-600 text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl transition shadow-md';
+
             if (cat === 'All') {
-                renderPros(pros);
+                renderProsGrid(pros);
+                updateMapMarkers(pros);
             } else {
-                renderPros(pros.filter(p => p.category === cat));
+                const filtered = pros.filter(p => p.category === cat);
+                renderProsGrid(filtered);
+                updateMapMarkers(filtered);
             }
         }
 
         function resetFilters() {
             document.getElementById('searchInput').value = '';
-            renderPros(pros);
-            resetMapView();
+            filterByCategory('All');
         }
 
-        function openProModal() {
-            document.getElementById('proModal').classList.remove('hidden');
-            document.getElementById('proModal').classList.add('flex');
+        function locateOnMap(lat, lng) {
+            if (map) {
+                map.flyTo([lat, lng], 15, { duration: 1.2 });
+            }
         }
 
-        function openSubscriptionModal() {
-            document.getElementById('subscriptionModal').classList.remove('hidden');
-            document.getElementById('subscriptionModal').classList.add('flex');
+        function resetMapView() {
+            if (map) {
+                map.flyTo(defaultCenter, 12);
+            }
         }
 
-        function openLoginModal() {
-            document.getElementById('loginModal').classList.remove('hidden');
-            document.getElementById('loginModal').classList.add('flex');
+        // Modal Handlers
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(id).classList.add('flex');
         }
 
         function closeModal(id) {
-            document.getElementById(id).classList.remove('flex');
             document.getElementById(id).classList.add('hidden');
+            document.getElementById(id).classList.remove('flex');
         }
 
-        window.onload = () => {
-            initMap();
-            renderPros();
-            updateUserUI();
-            updateInboxUI();
+        // Real-Time Chat Engine Logic
+        function openChatWithPro(proId) {
+            const foundPro = pros.find(p => String(p.id) === String(proId));
+            if (!foundPro) return;
+
+            activeChatPartner = foundPro;
+            document.getElementById('chatAvatar').src = foundPro.img;
+            document.getElementById('chatName').innerText = foundPro.name;
+            document.getElementById('chatCategory').innerText = foundPro.category;
+
+            renderActiveChatHistory();
+            openModal('chatModal');
+            markMessagesAsRead(foundPro.id);
+        }
+
+        function getStoredMessages() {
+            return JSON.parse(localStorage.getItem('myhelper_chat_messages')) || [];
+        }
+
+        function saveMessageToStorage(msgObj) {
+            const msgs = getStoredMessages();
+            msgs.push(msgObj);
+            localStorage.setItem('myhelper_chat_messages', JSON.stringify(msgs));
+            updateInboxBadgeCount();
+        }
+
+        function sendChatMessage(event) {
+            event.preventDefault();
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text || !activeChatPartner) return;
+
+            const newMsg = {
+                id: 'msg_' + Date.now(),
+                senderId: currentUser.id,
+                senderName: currentUser.name,
+                receiverId: activeChatPartner.id,
+                receiverName: activeChatPartner.name,
+                text: text,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                read: true
+            };
+
+            saveMessageToStorage(newMsg);
+            renderActiveChatHistory();
+
+            // 1. Multi-Tab Synchronizer
+            chatChannel.postMessage({ type: 'NEW_CHAT_MESSAGE', payload: newMsg });
+
+            // 2. PeerJS Direct Connection fallback
+            if (peer && peerConn && peerConn.open) {
+                peerConn.send(newMsg);
+            }
+
+            // 3. Simulated AI/Helper Auto-Response for smooth UX test
+            setTimeout(() => {
+                if (activeChatPartner) {
+                    const replyMsg = {
+                        id: 'msg_' + (Date.now() + 1),
+                        senderId: activeChatPartner.id,
+                        senderName: activeChatPartner.name,
+                        receiverId: currentUser.id,
+                        receiverName: currentUser.name,
+                        text: `Thanks for reaching out! I can certainly assist you with ${activeChatPartner.category.toLowerCase()} tasks. When would you like to schedule?`,
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        read: false
+                    };
+                    saveMessageToStorage(replyMsg);
+                    renderActiveChatHistory();
+                    updateInboxBadgeCount();
+                }
+            }, 1200);
+
+            input.value = '';
+        }
+
+        function receiveIncomingMessage(msg) {
+            saveMessageToStorage(msg);
+            if (activeChatPartner && (msg.senderId === activeChatPartner.id || msg.receiverId === activeChatPartner.id)) {
+                renderActiveChatHistory();
+            }
+            updateInboxBadgeCount();
+        }
+
+        // Receive BroadcastChannel messages across browser tabs
+        chatChannel.onmessage = (event) => {
+            if (event.data && event.data.type === 'NEW_CHAT_MESSAGE') {
+                const incoming = event.data.payload;
+                if (incoming.senderId !== currentUser.id) {
+                    receiveIncomingMessage(incoming);
+                }
+            }
         };
+
+        function renderActiveChatHistory() {
+            if (!activeChatPartner) return;
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = '';
+
+            const allMsgs = getStoredMessages();
+            const conversation = allMsgs.filter(m => 
+                (m.senderId === currentUser.id && m.receiverId === activeChatPartner.id) ||
+                (m.senderId === activeChatPartner.id && m.receiverId === currentUser.id)
+            );
+
+            if (conversation.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-slate-500 my-8 text-xs">
+                        <i class="fa-solid fa-lock text-slate-600 text-lg mb-1"></i><br>
+                        Start a secure live message thread with ${activeChatPartner.name}
+                    </div>
+                `;
+                return;
+            }
+
+            conversation.forEach(m => {
+                const isSentByMe = m.senderId === currentUser.id;
+                const msgBubble = document.createElement('div');
+                msgBubble.className = `flex flex-col ${isSentByMe ? 'items-end' : 'items-start'}`;
+
+                msgBubble.innerHTML = `
+                    <div class="max-w-[80%] px-3.5 py-2 rounded-2xl ${isSentByMe ? 'bg-blue-600 text-white rounded-br-xs' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-xs'}">
+                        <p class="text-xs leading-relaxed">${m.text}</p>
+                        <span class="text-[9px] text-slate-400 block mt-1 text-right">${m.timestamp}</span>
+                    </div>
+                `;
+                container.appendChild(msgBubble);
+            });
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Inbox Modal Engine
+        function openInboxModal() {
+            renderInboxThreads();
+            openModal('inboxModal');
+        }
+
+        function renderInboxThreads() {
+            const threadList = document.getElementById('inboxThreadList');
+            threadList.innerHTML = '';
+
+            const allMsgs = getStoredMessages();
+            if (allMsgs.length === 0) {
+                threadList.innerHTML = `
+                    <div class="text-center p-8 text-slate-500 text-xs">
+                        <i class="fa-solid fa-comments text-2xl mb-2 text-slate-700"></i>
+                        <p>No chat history yet. Connect with a helper to start messaging!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Group threads by conversation partner
+            const threads = {};
+            allMsgs.forEach(m => {
+                const partnerId = m.senderId === currentUser.id ? m.receiverId : m.senderId;
+                const partnerName = m.senderId === currentUser.id ? m.receiverName : m.senderName;
+                
+                if (!threads[partnerId] || new Date(m.timestamp) > new Date(threads[partnerId].timestamp)) {
+                    threads[partnerId] = {
+                        partnerId: partnerId,
+                        partnerName: partnerName,
+                        lastText: m.text,
+                        timestamp: m.timestamp,
+                        read: m.read || m.senderId === currentUser.id
+                    };
+                }
+            });
+
+            Object.values(threads).forEach(t => {
+                const partnerObj = pros.find(p => String(p.id) === String(t.partnerId)) || {
+                    img: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+                    category: 'Client / User'
+                };
+
+                const threadItem = document.createElement('div');
+                threadItem.className = 'glass-card p-3 rounded-2xl flex items-center justify-between cursor-pointer hover:border-blue-500/50 transition';
+                threadItem.onclick = () => {
+                    closeModal('inboxModal');
+                    openChatWithPro(t.partnerId);
+                };
+
+                threadItem.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <img src="${partnerObj.img}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">
+                        <div>
+                            <h4 class="text-xs font-bold text-white">${t.partnerName}</h4>
+                            <p class="text-[11px] text-slate-400 line-clamp-1">${t.lastText}</p>
+                        </div>
+                    </div>
+                    <span class="text-[9px] text-slate-500 font-semibold">${t.timestamp}</span>
+                `;
+                threadList.appendChild(threadItem);
+            });
+        }
+
+        function updateInboxBadgeCount() {
+            const allMsgs = getStoredMessages();
+            const unread = allMsgs.filter(m => m.receiverId === currentUser.id && !m.read).length;
+            const badge = document.getElementById('inboxCountBadge');
+            
+            if (unread > 0) {
+                badge.innerText = unread;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function markMessagesAsRead(partnerId) {
+            const msgs = getStoredMessages();
+            msgs.forEach(m => {
+                if (m.senderId === partnerId && m.receiverId === currentUser.id) {
+                    m.read = true;
+                }
+            });
+            localStorage.setItem('myhelper_chat_messages', JSON.stringify(msgs));
+            updateInboxBadgeCount();
+        }
+
+        // Account Registration Handler (Saves Backup .TXT File)
+        function handleRegistration(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('regName').value.trim();
+            const pass = document.getElementById('regPassword').value.trim();
+            const jobsInput = document.getElementById('regJobs').value.trim();
+            const category = document.getElementById('regCategory').value;
+            const rate = document.getElementById('regRate').value;
+            const phone = document.getElementById('regPhone').value.trim();
+            const img = document.getElementById('regImg').value.trim();
+            const bio = document.getElementById('regBio').value.trim();
+
+            const jobsArray = jobsInput.split(',').map(j => j.trim()).filter(j => j.length > 0);
+
+            const newHelper = {
+                id: 'helper_' + Date.now(),
+                name: name,
+                password: pass,
+                category: category,
+                rate: rate,
+                phone: phone,
+                img: img,
+                bio: bio,
+                lat: defaultCenter[0] + (Math.random() - 0.5) * 0.08,
+                lng: defaultCenter[1] + (Math.random() - 0.5) * 0.08,
+                isPro: false,
+                jobs: jobsArray
+            };
+
+            pros.unshift(newHelper);
+            localStorage.setItem('myhelper_map_pros', JSON.stringify(pros));
+
+            // Generate Backup .txt file for client download
+            const backupContent = `====================================
+MYHELPER ACCOUNT CREDENTIALS & BACKUP
+====================================
+Account Name: ${name}
+Password: ${pass}
+Category: ${category}
+Hourly Rate: $${rate}/hr
+Phone: ${phone}
+Registered Jobs: ${jobsArray.join(', ')}
+Date Created: ${new Date().toLocaleString()}
+====================================`;
+
+            const blob = new Blob([backupContent], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${name.replace(/\s+/g, '_')}_MyHelper_Backup.txt`;
+            link.click();
+
+            // Set as Logged In User
+            currentUser = { id: newHelper.id, name: newHelper.name };
+            localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
+
+            updateUserStatusUI();
+            closeModal('proModal');
+            renderProsGrid(pros);
+            updateMapMarkers(pros);
+
+            alert(`Registration successful! Account backup saved to your downloads.`);
+        }
+
+        // Account Login Handler
+        function handleLogin(event) {
+            event.preventDefault();
+            const userIn = document.getElementById('loginUser').value.trim();
+            const passIn = document.getElementById('loginPass').value.trim();
+
+            const matched = pros.find(p => 
+                p.name.toLowerCase() === userIn.toLowerCase() && p.password === passIn
+            );
+
+            if (matched) {
+                currentUser = { id: matched.id, name: matched.name };
+                localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
+                updateUserStatusUI();
+                closeModal('loginModal');
+                initPeerEngine();
+                alert(`Welcome back, ${matched.name}! Logged in successfully.`);
+            } else {
+                alert("Invalid username or password. Try the Owner credentials!");
+            }
+        }
+
+        function logout() {
+            currentUser = { name: 'Client Guest', id: 'guest_' + Math.random().toString(36).substr(2, 6) };
+            localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
+            updateUserStatusUI();
+        }
+
+        function updateUserStatusUI() {
+            const userBox = document.getElementById('userStatusBox');
+            const loginBtn = document.getElementById('loginBtn');
+            const nameSpan = document.getElementById('loggedInName');
+
+            if (currentUser && currentUser.name !== 'Client Guest') {
+                nameSpan.innerText = currentUser.name;
+                userBox.classList.remove('hidden');
+                userBox.classList.add('flex');
+                loginBtn.classList.add('hidden');
+            } else {
+                userBox.classList.add('hidden');
+                userBox.classList.remove('flex');
+                loginBtn.classList.remove('hidden');
+            }
+        }
+
+        // Pro Upgrade Subscription Handler ($1/month)
+        function processProSubscription() {
+            if (!currentUser || currentUser.name === 'Client Guest') {
+                alert("Please log in or register a helper account first!");
+                closeModal('subscriptionModal');
+                openModal('loginModal');
+                return;
+            }
+
+            const targetPro = pros.find(p => String(p.id) === String(currentUser.id) || p.name.toLowerCase() === currentUser.name.toLowerCase());
+            if (targetPro) {
+                targetPro.isPro = true;
+                localStorage.setItem('myhelper_map_pros', JSON.stringify(pros));
+                renderProsGrid(pros);
+                updateMapMarkers(pros);
+                closeModal('subscriptionModal');
+                alert("🎉 Congratulations! Your $1/mo PRO Membership is now ACTIVE.");
+            } else {
+                alert("Please register a helper profile first to activate PRO status.");
+            }
+        }
+
+        // Initial App Launch
+        window.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            renderProsGrid(pros);
+            updateUserStatusUI();
+            updateInboxBadgeCount();
+            initPeerEngine();
+        });
     </script>
 </body>
 </html>

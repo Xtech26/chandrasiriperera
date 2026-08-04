@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyFixer — On-Demand Verified Local Pros & Live Tracking</title>
+    <title>MyHelper — On-Demand Verified Local Pros & Live Tracking</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -36,7 +36,7 @@
     </script>
     <style>
         .glass-panel {
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -57,7 +57,6 @@
             background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
             pointer-events: none;
         }
-        /* Custom Leaflet Map Styling */
         .leaflet-popup-content-wrapper, .leaflet-popup-tip {
             background: #0f172a !important;
             color: #f8fafc !important;
@@ -71,7 +70,7 @@
         .custom-pin {
             display: flex;
             align-items: center;
-            justify-center;
+            justify-content: center;
             width: 38px;
             height: 38px;
             border-radius: 50%;
@@ -82,8 +81,19 @@
             cursor: pointer;
             transition: transform 0.2s ease;
         }
+        .custom-pin-pro {
+            background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.8) !important;
+        }
         .custom-pin:hover {
             transform: scale(1.2);
+        }
+        .chat-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
         }
     </style>
 </head>
@@ -99,24 +109,37 @@
             
             <!-- Brand Logo -->
             <div class="flex items-center space-x-3 cursor-pointer" onclick="resetFilters()">
-                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/25">
-                    <i class="fa-solid fa-location-dot text-white text-lg"></i>
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-amber-500 flex items-center justify-center shadow-lg shadow-blue-500/25">
+                    <i class="fa-solid fa-crown text-white text-lg"></i>
                 </div>
                 <div class="flex flex-col">
-                    <span class="text-2xl font-extrabold tracking-tight text-white leading-none">My<span class="text-blue-500">Fixer</span></span>
-                    <span class="text-[10px] font-semibold text-slate-400 tracking-widest uppercase mt-1">Live Map & Dispatch</span>
+                    <span class="text-2xl font-extrabold tracking-tight text-white leading-none">My<span class="text-blue-500">Helper</span></span>
+                    <span class="text-[10px] font-semibold text-amber-400 tracking-widest uppercase mt-1">PRO Network & Live Map</span>
                 </div>
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex items-center space-x-3 sm:space-x-4">
-                <button onclick="toggleSeedData()" class="hidden sm:inline-flex items-center text-xs font-semibold text-slate-400 hover:text-slate-200 transition px-3 py-2 rounded-xl bg-slate-900 border border-slate-800">
-                    <i class="fa-solid fa-database mr-2 text-blue-400"></i> Demo Seed
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                
+                <!-- Account Status / Logged In Indicator -->
+                <div id="userStatusBox" class="hidden items-center space-x-2 bg-slate-900 border border-amber-500/30 px-3 py-1.5 rounded-xl">
+                    <i class="fa-solid fa-user-shield text-amber-400 text-xs"></i>
+                    <span id="loggedInName" class="text-xs font-bold text-slate-200">the owner</span>
+                    <button onclick="logout()" class="text-[10px] text-rose-400 hover:underline ml-1">(Logout)</button>
+                </div>
+
+                <button onclick="openLoginModal()" id="loginBtn" class="inline-flex items-center text-xs font-semibold text-slate-300 hover:text-white transition px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                    <i class="fa-solid fa-right-to-bracket mr-1.5 text-blue-400"></i> Log In
+                </button>
+
+                <button onclick="openSubscriptionModal()" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs sm:text-sm font-black px-3.5 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/20 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Pro ($1/mo)</span>
                 </button>
 
                 <button onclick="openProModal()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-blue-600/25 flex items-center space-x-2 border border-blue-400/20">
                     <i class="fa-solid fa-user-plus"></i>
-                    <span>Become a Pro</span>
+                    <span class="hidden sm:inline">Register Helper</span>
                 </button>
             </div>
         </div>
@@ -126,23 +149,20 @@
     <header class="relative pt-8 pb-10 px-4 border-b border-slate-800/80">
         <div class="max-w-4xl mx-auto text-center relative z-10">
             
-            <div class="inline-flex items-center space-x-2 bg-blue-500/10 border border-blue-500/20 px-3.5 py-1.5 rounded-full text-blue-400 text-xs font-semibold mb-4 backdrop-blur-md">
-                <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                </span>
-                <span>Interactive GPS Dispatch Active</span>
+            <div class="inline-flex items-center space-x-2 bg-amber-500/10 border border-amber-500/20 px-3.5 py-1.5 rounded-full text-amber-400 text-xs font-semibold mb-4 backdrop-blur-md">
+                <i class="fa-solid fa-crown text-amber-400 text-xs"></i>
+                <span>PRO Membership Active — $1/Month Subscription Available</span>
             </div>
 
             <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-4 tracking-tight leading-tight">
-                Locate & Book Nearby <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400">Technicians Live</span>
+                Hire Verified Local Helpers & <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-blue-400 to-indigo-400">PRO Specialist Jobs</span>
             </h1>
 
             <!-- Search Panel -->
             <div class="glass-panel p-2.5 rounded-2xl shadow-2xl max-w-2xl mx-auto flex flex-col sm:flex-row gap-2">
                 <div class="flex-grow flex items-center bg-slate-900/80 rounded-xl px-4 py-3 border border-slate-800 focus-within:border-blue-500 transition">
                     <i class="fa-solid fa-magnifying-glass text-blue-500 mr-3 text-sm"></i>
-                    <input type="text" id="searchInput" onkeyup="filterPros()" placeholder="Filter by trade or name..." class="bg-transparent w-full text-slate-100 placeholder-slate-500 focus:outline-none text-sm font-medium">
+                    <input type="text" id="searchInput" onkeyup="filterPros()" placeholder="Search by job (e.g. Plumbing, Wiring, Locksmith) or name..." class="bg-transparent w-full text-slate-100 placeholder-slate-500 focus:outline-none text-sm font-medium">
                 </div>
                 <button onclick="filterPros()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 rounded-xl transition text-sm shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2">
                     <span>Search</span>
@@ -152,10 +172,10 @@
             <!-- Category Pills -->
             <div class="flex flex-wrap justify-center gap-2 mt-4">
                 <button onclick="filterByCategory('All')" class="cat-pill bg-blue-600 text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl transition shadow-md">All</button>
+                <button onclick="filterByCategory('Master Pro / Multi-Trade')" class="cat-pill bg-slate-900 border border-amber-500/40 text-amber-300 hover:border-amber-400 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition">👑 Master Pro</button>
                 <button onclick="filterByCategory('Plumbing')" class="cat-pill bg-slate-900 border border-slate-800 text-slate-300 hover:border-blue-500/50 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition">🚰 Plumbing</button>
                 <button onclick="filterByCategory('Electrical')" class="cat-pill bg-slate-900 border border-slate-800 text-slate-300 hover:border-blue-500/50 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition">⚡ Electrical</button>
                 <button onclick="filterByCategory('AC Repair')" class="cat-pill bg-slate-900 border border-slate-800 text-slate-300 hover:border-blue-500/50 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition">❄️ AC Repair</button>
-                <button onclick="filterByCategory('Tech Fix')" class="cat-pill bg-slate-900 border border-slate-800 text-slate-300 hover:border-blue-500/50 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition">💻 Tech Setup</button>
             </div>
         </div>
     </header>
@@ -168,8 +188,8 @@
             <div class="lg:col-span-7 space-y-6">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h2 id="sectionTitle" class="text-xl font-extrabold text-white tracking-tight">Local Service Directory</h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Click "Focus Map" to zoom in on any provider's GPS position</p>
+                        <h2 id="sectionTitle" class="text-xl font-extrabold text-white tracking-tight">Active Helper Directory</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Click "Chat" to message or view their offered jobs</p>
                     </div>
                     <span id="activeCount" class="text-xs font-semibold bg-slate-900 text-blue-400 px-3 py-1.5 rounded-lg border border-slate-800">0 Active</span>
                 </div>
@@ -185,7 +205,7 @@
                     <div class="flex justify-between items-center px-3 py-2 mb-2">
                         <div class="flex items-center space-x-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span class="text-xs font-bold text-white uppercase tracking-wider">Live Coverage Map</span>
+                            <span class="text-xs font-bold text-white uppercase tracking-wider">Live Map Dispatch</span>
                         </div>
                         <button onclick="resetMapView()" class="text-[10px] text-blue-400 hover:underline">Reset View</button>
                     </div>
@@ -198,17 +218,7 @@
         </div>
     </main>
 
-    <!-- 1. FULL PROFILE DETAIL MODAL -->
-    <div id="profileModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
-        <div class="glass-panel border border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 relative shadow-2xl my-auto">
-            <button onclick="closeModal('profileModal')" class="absolute top-6 right-6 w-9 h-9 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            <div id="modalProfileContent"></div>
-        </div>
-    </div>
-
-    <!-- 2. REGISTER PRO MODAL -->
+    <!-- MODAL 1: REGISTER PRO MODAL -->
     <div id="proModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
         <div class="glass-panel border border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 relative shadow-2xl my-auto">
             <button onclick="closeModal('proModal')" class="absolute top-6 right-6 w-9 h-9 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
@@ -216,20 +226,30 @@
             </button>
 
             <div class="mb-6">
-                <span class="bg-blue-500/10 text-blue-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-blue-500/20">Pro Registration</span>
-                <h3 class="text-2xl font-extrabold text-white mt-2">Join MyFixer Live Map</h3>
-                <p class="text-xs text-slate-400 mt-1">Publish your profile and broadcast your service area.</p>
+                <span class="bg-blue-500/10 text-blue-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-blue-500/20">Helper Registration</span>
+                <h3 class="text-2xl font-extrabold text-white mt-2">Create Helper Account</h3>
+                <p class="text-xs text-slate-400 mt-1">Creating an account saves a backup `.txt` file onto your device.</p>
             </div>
 
             <form onsubmit="handleRegistration(event)" class="space-y-4 text-xs">
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Full Name / Business Title</label>
-                    <input type="text" id="regName" required placeholder="e.g. Alex Miller Plumbing" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                    <label class="block font-semibold text-slate-300 mb-1">Full Name / Account Username</label>
+                    <input type="text" id="regName" required placeholder="e.g. Alex Miller" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Account Password</label>
+                    <input type="password" id="regPassword" required placeholder="Create a secure password" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-amber-400 mb-1">Jobs You Do (Separated by commas)</label>
+                    <input type="text" id="regJobs" required placeholder="e.g. Pipe Leak Repair, Circuit Installation, AC Maintenance" class="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-amber-400 transition">
                 </div>
                 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-semibold text-slate-300 mb-1">Trade Category</label>
+                        <label class="block font-semibold text-slate-300 mb-1">Primary Category</label>
                         <select id="regCategory" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
                             <option value="Plumbing">Plumbing</option>
                             <option value="Electrical">Electrical</option>
@@ -244,7 +264,7 @@
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Phone Number (For Client Calls)</label>
+                    <label class="block font-semibold text-slate-300 mb-1">Phone Number</label>
                     <input type="tel" id="regPhone" required placeholder="+1 (555) 019-2834" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
                 </div>
 
@@ -254,75 +274,168 @@
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Services & License Info</label>
-                    <textarea id="regBio" rows="3" required placeholder="Describe your services and experience..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition resize-none"></textarea>
+                    <label class="block font-semibold text-slate-300 mb-1">Bio / Overview</label>
+                    <textarea id="regBio" rows="2" required placeholder="Describe your experience..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition resize-none"></textarea>
                 </div>
 
-                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 rounded-xl transition text-sm shadow-lg shadow-blue-600/30">
-                    Publish My Profile & Location
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 rounded-xl transition text-sm shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>Register & Download Account .TXT</span>
                 </button>
             </form>
         </div>
     </div>
 
+    <!-- MODAL 2: PAY TO BE A PRO MODAL ($1/MONTH) -->
+    <div id="subscriptionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
+        <div class="glass-panel border border-amber-500/40 rounded-3xl max-w-md w-full p-6 sm:p-8 relative shadow-2xl my-auto text-center">
+            <button onclick="closeModal('subscriptionModal')" class="absolute top-6 right-6 w-9 h-9 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-amber-500/20">
+                <i class="fa-solid fa-crown text-2xl text-slate-950"></i>
+            </div>
+
+            <span class="bg-amber-500/10 text-amber-400 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase border border-amber-500/30">Pro Membership</span>
+            <h3 class="text-2xl font-black text-white mt-2">Pay to be a PRO</h3>
+            <p class="text-xs text-slate-400 mt-1">Get top dispatch priority, gold badge, and list unlimited custom jobs.</p>
+
+            <!-- Price Tag -->
+            <div class="my-6 p-4 rounded-2xl bg-slate-900 border border-slate-800">
+                <div class="text-3xl font-black text-white">$1 <span class="text-xs font-semibold text-slate-400">/ month</span></div>
+                <p class="text-[11px] text-emerald-400 font-semibold mt-1"><i class="fa-solid fa-check mr-1"></i> Cancel anytime. Instant activation.</p>
+            </div>
+
+            <!-- Features -->
+            <ul class="text-left space-y-2 text-xs text-slate-300 mb-6 bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
+                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-400 mr-2"></i> Verified Gold PRO Badge on Map & Profile</li>
+                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-400 mr-2"></i> Rank top on client search results</li>
+                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-400 mr-2"></i> Add unlimited custom jobs you do</li>
+            </ul>
+
+            <button onclick="processProSubscription()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black py-3.5 rounded-xl transition text-sm shadow-xl shadow-amber-500/25 flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-credit-card"></i>
+                <span>Subscribe for $1 / Month</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 3: LOGIN MODAL -->
+    <div id="loginModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
+        <div class="glass-panel border border-slate-800 rounded-3xl max-w-sm w-full p-6 relative shadow-2xl my-auto">
+            <button onclick="closeModal('loginModal')" class="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="mb-5 text-center">
+                <div class="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center mx-auto mb-2 text-blue-400">
+                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                </div>
+                <h3 class="text-xl font-extrabold text-white">Helper Login</h3>
+                <p class="text-xs text-slate-400">Log into your helper account or Owner demo</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-3.5 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Username / Name</label>
+                    <input type="text" id="loginUser" required placeholder="e.g. the owner" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Password</label>
+                    <input type="password" id="loginPass" required placeholder="e.g. @owerguy67" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300">
+                    <span class="font-bold">Owner Demo Credentials:</span><br>
+                    User: <code class="text-white bg-slate-900 px-1 rounded">the owner</code> | Pass: <code class="text-white bg-slate-900 px-1 rounded">@owerguy67</code>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition text-xs shadow-lg shadow-blue-600/30">
+                    Log In To Account
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: LIVE CHAT MODAL -->
+    <div id="chatModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
+        <div class="glass-panel border border-slate-800 rounded-3xl max-w-md w-full h-[550px] flex flex-col relative shadow-2xl my-auto overflow-hidden">
+            
+            <!-- Chat Header -->
+            <div class="p-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <img id="chatAvatar" src="" class="w-10 h-10 rounded-xl object-cover border border-slate-700">
+                    <div>
+                        <h4 id="chatName" class="text-sm font-bold text-white leading-none">Helper Name</h4>
+                        <span id="chatCategory" class="text-[10px] text-blue-400 font-semibold uppercase">Category</span>
+                    </div>
+                </div>
+                <button onclick="closeModal('chatModal')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Message Area -->
+            <div id="chatMessages" class="flex-grow p-4 space-y-3 overflow-y-auto chat-scroll text-xs">
+                <!-- Messages render dynamically -->
+            </div>
+
+            <!-- Chat Input Box -->
+            <form onsubmit="sendChatMessage(event)" class="p-3 bg-slate-900/90 border-t border-slate-800 flex items-center space-x-2">
+                <input type="text" id="chatInput" placeholder="Type a message to this helper..." required class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-slate-100 text-xs focus:outline-none focus:border-blue-500 transition">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white w-9 h-9 rounded-xl flex items-center justify-center transition shadow-lg shadow-blue-600/30">
+                    <i class="fa-solid fa-paper-plane text-xs"></i>
+                </button>
+            </form>
+
+        </div>
+    </div>
+
     <!-- Application Logic -->
     <script>
-        // Default Seed Data with GPS Coordinates
-        const defaultCenter = [40.7128, -74.0060]; // New York Metro Area
+        const defaultCenter = [40.7128, -74.0060];
         
-        const seedData = [
-            {
-                id: 101,
-                name: "Marcus Vance",
-                category: "Plumbing",
-                rate: 65,
-                phone: "+1 (555) 234-8901",
-                img: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=300",
-                bio: "Master plumber with 12+ years experience. Emergency burst pipes, water heaters, and drain unclogging.",
-                rating: "4.9",
-                lat: 40.7282,
-                lng: -73.9942,
-                icon: "fa-faucet-drip"
-            },
-            {
-                id: 102,
-                name: "Elena Rostova",
-                category: "Electrical",
-                rate: 80,
-                phone: "+1 (555) 891-2345",
-                img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300",
-                bio: "Certified residential electrician. Panel breaker upgrades, lighting, smart homes, and inspections.",
-                rating: "5.0",
-                lat: 40.7051,
-                lng: -74.0120,
-                icon: "fa-bolt"
-            },
-            {
-                id: 103,
-                name: "Carlos Mendez",
-                category: "AC Repair",
-                rate: 75,
-                phone: "+1 (555) 456-7890",
-                img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300",
-                bio: "HVAC specialist for central air conditioning, heat pumps, and duct repairs. Rapid 30-min response.",
-                rating: "4.8",
-                lat: 40.7418,
-                lng: -73.9893,
-                icon: "fa-snowflake"
-            }
-        ];
+        // DEFAULT DEMO OWNER ACCOUNT WITH MANY JOBS
+        const ownerDemoAccount = {
+            id: 999001,
+            name: "the owner",
+            password: "@owerguy67",
+            category: "Master Pro / Multi-Trade",
+            rate: "150",
+            phone: "+1 (555) 019-9999",
+            img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
+            bio: "Official Platform Owner & Verified Master Pro. Equipped for large residential and commercial jobs.",
+            lat: 40.7128,
+            lng: -74.0060,
+            icon: "fa-crown",
+            isPro: true,
+            jobs: [
+                "Full House Plumbing Overhaul",
+                "Smart Home Electrical Wiring",
+                "HVAC System Repair & Installation",
+                "Emergency Locksmith & Access Control",
+                "Solar Panel Setup & Grid Integration"
+            ]
+        };
 
-        let pros = JSON.parse(localStorage.getItem('myfixer_map_pros')) || [...seedData];
+        let pros = JSON.parse(localStorage.getItem('myhelper_map_pros')) || [];
+        
+        // Ensure Owner Account is always present in storage
+        if (!pros.some(p => p.name.toLowerCase() === 'the owner')) {
+            pros.unshift(ownerDemoAccount);
+            localStorage.setItem('myhelper_map_pros', JSON.stringify(pros));
+        }
+
+        let currentUser = JSON.parse(localStorage.getItem('myhelper_current_user')) || null;
+        let activeChatProId = null;
         let map, markersGroup;
 
-        // Initialize Leaflet Map with Dark Theme
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView(defaultCenter, 12);
-            
-            // Add zoom control at bottom right
             L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-            // Dark Matter CartoDB Tiles
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; OpenStreetMap &copy; CARTO',
                 subdomains: 'abcd',
@@ -333,16 +446,17 @@
             updateMapMarkers(pros);
         }
 
-        // Update Markers on Map
         function updateMapMarkers(dataList) {
             if (!markersGroup) return;
             markersGroup.clearLayers();
 
             dataList.forEach(p => {
-                const iconClass = p.icon || 'fa-wrench';
+                const iconClass = p.isPro ? 'fa-crown text-amber-300' : (p.icon || 'fa-hand-holding-hand');
+                const pinClass = p.isPro ? 'custom-pin custom-pin-pro' : 'custom-pin';
+
                 const customIcon = L.divIcon({
                     className: 'custom-pin-wrapper',
-                    html: `<div class="custom-pin"><i class="fa-solid ${iconClass} text-xs"></i></div>`,
+                    html: `<div class="${pinClass}"><i class="fa-solid ${iconClass} text-xs"></i></div>`,
                     iconSize: [38, 38],
                     iconAnchor: [19, 19]
                 });
@@ -351,9 +465,9 @@
                 marker.bindPopup(`
                     <div class="p-1 text-center font-sans">
                         <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover mx-auto mb-2 border border-slate-700">
-                        <h4 class="font-bold text-sm text-white">${p.name}</h4>
-                        <p class="text-[10px] text-blue-400 font-bold uppercase mb-2">${p.category} — $${p.rate}/hr</p>
-                        <a href="tel:${p.phone}" class="inline-block bg-blue-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg">Call ${p.phone}</a>
+                        <h4 class="font-bold text-sm text-white">${p.name} ${p.isPro ? '👑' : ''}</h4>
+                        <p class="text-[10px] text-amber-400 font-bold uppercase mb-2">${p.category} — $${p.rate}/hr</p>
+                        <button onclick="openChatModal(${p.id})" class="inline-block bg-blue-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg">Chat Live</button>
                     </div>
                 `);
 
@@ -370,10 +484,10 @@
             if (dataList.length === 0) {
                 grid.innerHTML = `
                     <div class="col-span-full text-center py-12 px-4 glass-card rounded-3xl border border-dashed border-slate-800">
-                        <i class="fa-solid fa-map-location-dot text-3xl text-slate-500 mb-3"></i>
-                        <h3 class="text-base font-bold text-white mb-1">No Pros Found</h3>
-                        <p class="text-xs text-slate-400 mb-4">No providers match your filter criteria.</p>
-                        <button onclick="resetFilters()" class="bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-xl">Reset Search</button>
+                        <i class="fa-solid fa-user-slash text-3xl text-slate-500 mb-3"></i>
+                        <h3 class="text-base font-bold text-white mb-1">No Helpers Found</h3>
+                        <p class="text-xs text-slate-400 mb-4 max-w-xs mx-auto">Try clearing your search query or register as a helper.</p>
+                        <button onclick="openProModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition">Become a Helper</button>
                     </div>
                 `;
                 updateMapMarkers([]);
@@ -381,17 +495,36 @@
             }
 
             dataList.forEach(p => {
+                const jobBadges = (p.jobs && p.jobs.length > 0) 
+                    ? p.jobs.map(j => `<span class="bg-slate-900 border border-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-md">${j}</span>`).join(' ')
+                    : `<span class="text-[10px] text-slate-500 italic">General Service</span>`;
+
                 grid.innerHTML += `
-                    <div class="glass-card rounded-2xl p-5 flex flex-col justify-between transition-all duration-300">
+                    <div class="glass-card rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 ${p.isPro ? 'border-amber-500/30' : ''}">
                         <div>
                             <div class="flex items-center space-x-3 mb-3">
                                 <img src="${p.img}" class="w-11 h-11 rounded-xl object-cover border border-slate-700" onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'">
                                 <div class="overflow-hidden">
-                                    <span class="bg-blue-500/10 text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-blue-500/20">${p.category}</span>
-                                    <h3 class="text-sm font-bold text-white mt-0.5 truncate">${p.name}</h3>
+                                    <div class="flex items-center space-x-1">
+                                        <span class="bg-blue-500/10 text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-blue-500/20">${p.category}</span>
+                                        ${p.isPro ? '<span class="bg-amber-500/10 text-amber-400 text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase border border-amber-500/30">PRO</span>' : ''}
+                                    </div>
+                                    <h3 class="text-sm font-bold text-white mt-0.5 truncate flex items-center">
+                                        ${p.name}
+                                        ${p.isPro ? '<i class="fa-solid fa-crown text-amber-400 ml-1 text-xs"></i>' : ''}
+                                    </h3>
                                 </div>
                             </div>
-                            <p class="text-slate-300 text-xs leading-relaxed mb-4 line-clamp-2">${p.bio}</p>
+                            
+                            <p class="text-slate-300 text-xs leading-relaxed mb-3 line-clamp-2">${p.bio}</p>
+
+                            <!-- JOBS DONE SECTION -->
+                            <div class="mb-4">
+                                <span class="text-[9px] font-bold uppercase text-slate-400 block mb-1">Jobs Offered:</span>
+                                <div class="flex flex-wrap gap-1 max-h-16 overflow-y-auto">
+                                    ${jobBadges}
+                                </div>
+                            </div>
                         </div>
 
                         <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
@@ -401,14 +534,16 @@
                             </div>
                             
                             <div class="flex space-x-1.5">
-                                <button onclick="focusMapOnPro(${p.lat}, ${p.lng})" class="bg-slate-900 hover:bg-slate-800 text-blue-400 text-[11px] font-semibold px-2.5 py-2 rounded-xl border border-slate-800 transition flex items-center space-x-1">
-                                    <i class="fa-solid fa-crosshairs text-[10px]"></i>
-                                    <span>Focus</span>
+                                <button onclick="focusMapOnPro(${p.lat}, ${p.lng})" title="Locate on map" class="bg-slate-900 hover:bg-slate-800 text-blue-400 text-[11px] font-semibold px-2 py-2 rounded-xl border border-slate-800 transition">
+                                    <i class="fa-solid fa-crosshairs"></i>
                                 </button>
-                                <a href="tel:${p.phone}" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold px-3 py-2 rounded-xl transition flex items-center space-x-1">
-                                    <i class="fa-solid fa-phone text-[9px]"></i>
-                                    <span>Call</span>
-                                </a>
+                                <button onclick="downloadAccountTxt(${p.id})" title="Download Account TXT" class="bg-slate-900 hover:bg-slate-800 text-emerald-400 text-[11px] font-semibold px-2 py-2 rounded-xl border border-slate-800 transition">
+                                    <i class="fa-solid fa-file-lines"></i>
+                                </button>
+                                <button onclick="openChatModal(${p.id})" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold px-3 py-2 rounded-xl transition flex items-center space-x-1">
+                                    <i class="fa-solid fa-comments text-[10px]"></i>
+                                    <span>Chat</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -416,6 +551,213 @@
             });
 
             updateMapMarkers(dataList);
+        }
+
+        // ACCOUNT DOWNLOAD AS .TXT FILE
+        function downloadAccountTxt(proId) {
+            const pro = pros.find(p => p.id === proId);
+            if (!pro) return;
+
+            const jobsList = (pro.jobs && pro.jobs.length > 0) ? pro.jobs.join(', ') : 'General Services';
+
+            const textData = 
+`==============================================
+         MYHELPER OFFICIAL ACCOUNT FILE        
+==============================================
+Account ID:     ${pro.id}
+Full Name:      ${pro.name}
+PRO Status:     ${pro.isPro ? 'SUBSCRIBED PRO ($1/mo)' : 'STANDARD'}
+Category:       ${pro.category}
+Hourly Rate:    $${pro.rate}/hr
+Phone Number:   ${pro.phone}
+Jobs Offered:   ${jobsList}
+Bio / Overview: ${pro.bio}
+Created Date:   ${new Date().toLocaleString()}
+==============================================
+Keep this file on your device for account records!`;
+
+            const blob = new Blob([textData], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `myhelper_account_${pro.name.replace(/\s+/g, '_')}.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function handleRegistration(e) {
+            e.preventDefault();
+            const randomLat = defaultCenter[0] + (Math.random() - 0.5) * 0.08;
+            const randomLng = defaultCenter[1] + (Math.random() - 0.5) * 0.08;
+
+            const jobsInput = document.getElementById('regJobs').value;
+            const jobsArray = jobsInput.split(',').map(j => j.trim()).filter(j => j.length > 0);
+
+            const newPro = {
+                id: Date.now(),
+                name: document.getElementById('regName').value,
+                password: document.getElementById('regPassword').value,
+                category: document.getElementById('regCategory').value,
+                rate: document.getElementById('regRate').value,
+                phone: document.getElementById('regPhone').value,
+                img: document.getElementById('regImg').value,
+                bio: document.getElementById('regBio').value,
+                jobs: jobsArray,
+                lat: randomLat,
+                lng: randomLng,
+                isPro: false,
+                icon: "fa-hand-holding-hand"
+            };
+
+            pros.unshift(newPro);
+            localStorage.setItem('myhelper_map_pros', JSON.stringify(pros));
+            
+            // Set current logged in user
+            currentUser = newPro;
+            localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
+            updateUserUI();
+
+            renderPros();
+            focusMapOnPro(randomLat, randomLng);
+            closeModal('proModal');
+
+            downloadAccountTxt(newPro.id);
+            alert(`Account created successfully!\n\nYour backup file (myhelper_account_${newPro.name}.txt) has been downloaded.`);
+        }
+
+        // LOGIN SYSTEM
+        function handleLogin(e) {
+            e.preventDefault();
+            const userVal = document.getElementById('loginUser').value.trim();
+            const passVal = document.getElementById('loginPass').value.trim();
+
+            const found = pros.find(p => p.name.toLowerCase() === userVal.toLowerCase() && p.password === passVal);
+
+            if (found) {
+                currentUser = found;
+                localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
+                updateUserUI();
+                closeModal('loginModal');
+                alert(`Welcome back, ${found.name}! You are now logged in.`);
+            } else {
+                alert('Invalid Username or Password. Use "the owner" and "@owerguy67" for the owner demo.');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('myhelper_current_user');
+            updateUserUI();
+            alert('Logged out successfully.');
+        }
+
+        function updateUserUI() {
+            const statusBox = document.getElementById('userStatusBox');
+            const loginBtn = document.getElementById('loginBtn');
+            const loggedInName = document.getElementById('loggedInName');
+
+            if (currentUser) {
+                statusBox.classList.remove('hidden');
+                statusBox.classList.add('flex');
+                loginBtn.classList.add('hidden');
+                loggedInName.innerText = currentUser.name;
+            } else {
+                statusBox.classList.add('hidden');
+                statusBox.classList.remove('flex');
+                loginBtn.classList.remove('hidden');
+            }
+        }
+
+        // PRO SUBSCRIPTION LOGIC ($1 / MONTH)
+        function processProSubscription() {
+            if (!currentUser) {
+                alert('Please log in or register an account first before subscribing to Pro!');
+                closeModal('subscriptionModal');
+                openLoginModal();
+                return;
+            }
+
+            // Upgrade current user
+            const proIndex = pros.findIndex(p => p.id === currentUser.id);
+            if (proIndex !== -1) {
+                pros[proIndex].isPro = true;
+                currentUser.isPro = true;
+                localStorage.setItem('myhelper_map_pros', JSON.stringify(pros));
+                localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
+            }
+
+            renderPros();
+            closeModal('subscriptionModal');
+            alert(`🎉 Success! Your account (${currentUser.name}) is now upgraded to PRO Status for $1/month!`);
+        }
+
+        // LIVE CHAT SYSTEM
+        function openChatModal(proId) {
+            const pro = pros.find(p => p.id === proId);
+            if (!pro) return;
+
+            activeChatProId = proId;
+            document.getElementById('chatName').innerText = pro.name;
+            document.getElementById('chatCategory').innerText = pro.category;
+            document.getElementById('chatAvatar').src = pro.img;
+
+            renderChatMessages();
+            document.getElementById('chatModal').classList.remove('hidden');
+            document.getElementById('chatModal').classList.add('flex');
+        }
+
+        function renderChatMessages() {
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.innerHTML = '';
+
+            const allChats = JSON.parse(localStorage.getItem('myhelper_chats')) || {};
+            const proChat = allChats[activeChatProId] || [
+                { sender: 'pro', text: `Hello! I'm active and available. How can I help you?` }
+            ];
+
+            proChat.forEach(msg => {
+                const isUser = msg.sender === 'user';
+                messagesContainer.innerHTML += `
+                    <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
+                        <div class="${isUser ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'} max-w-[80%] p-3 rounded-2xl shadow-sm">
+                            <p>${msg.text}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function sendChatMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text || !activeChatProId) return;
+
+            const allChats = JSON.parse(localStorage.getItem('myhelper_chats')) || {};
+            if (!allChats[activeChatProId]) {
+                allChats[activeChatProId] = [
+                    { sender: 'pro', text: `Hello! How can I help you with my services?` }
+                ];
+            }
+
+            allChats[activeChatProId].push({ sender: 'user', text: text });
+            localStorage.setItem('myhelper_chats', JSON.stringify(allChats));
+            input.value = '';
+            renderChatMessages();
+
+            setTimeout(() => {
+                const targetPro = pros.find(p => p.id === activeChatProId);
+                allChats[activeChatProId].push({ 
+                    sender: 'pro', 
+                    text: `Thanks for reaching out! I received: "${text}". Call me at ${targetPro ? targetPro.phone : 'my listed number'} to schedule.` 
+                });
+                localStorage.setItem('myhelper_chats', JSON.stringify(allChats));
+                if (document.getElementById('chatModal').classList.contains('flex')) {
+                    renderChatMessages();
+                }
+            }, 1200);
         }
 
         function focusMapOnPro(lat, lng) {
@@ -428,36 +770,15 @@
             map.flyTo(defaultCenter, 12);
         }
 
-        function handleRegistration(e) {
-            e.preventDefault();
-            // Random offset near default center to simulate real GPS drop
-            const randomLat = defaultCenter[0] + (Math.random() - 0.5) * 0.08;
-            const randomLng = defaultCenter[1] + (Math.random() - 0.5) * 0.08;
-
-            const newPro = {
-                id: Date.now(),
-                name: document.getElementById('regName').value,
-                category: document.getElementById('regCategory').value,
-                rate: document.getElementById('regRate').value,
-                phone: document.getElementById('regPhone').value,
-                img: document.getElementById('regImg').value,
-                bio: document.getElementById('regBio').value,
-                rating: "5.0",
-                lat: randomLat,
-                lng: randomLng,
-                icon: "fa-location-dot"
-            };
-
-            pros.unshift(newPro);
-            localStorage.setItem('myfixer_map_pros', JSON.stringify(pros));
-            renderPros();
-            focusMapOnPro(randomLat, randomLng);
-            closeModal('proModal');
-        }
-
         function filterPros() {
             const query = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = pros.filter(p => p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query) || p.bio.toLowerCase().includes(query));
+            const filtered = pros.filter(p => {
+                const nameMatch = p.name.toLowerCase().includes(query);
+                const catMatch = p.category.toLowerCase().includes(query);
+                const bioMatch = p.bio.toLowerCase().includes(query);
+                const jobMatch = p.jobs && p.jobs.some(j => j.toLowerCase().includes(query));
+                return nameMatch || catMatch || bioMatch || jobMatch;
+            });
             renderPros(filtered);
         }
 
@@ -475,15 +796,19 @@
             resetMapView();
         }
 
-        function toggleSeedData() {
-            pros = (pros.length === seedData.length) ? [] : [...seedData];
-            localStorage.setItem('myfixer_map_pros', JSON.stringify(pros));
-            renderPros();
-        }
-
         function openProModal() {
             document.getElementById('proModal').classList.remove('hidden');
             document.getElementById('proModal').classList.add('flex');
+        }
+
+        function openSubscriptionModal() {
+            document.getElementById('subscriptionModal').classList.remove('hidden');
+            document.getElementById('subscriptionModal').classList.add('flex');
+        }
+
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('loginModal').classList.add('flex');
         }
 
         function closeModal(id) {
@@ -491,10 +816,10 @@
             document.getElementById(id).classList.add('hidden');
         }
 
-        // Initialize Map & Render
         window.onload = () => {
             initMap();
             renderPros();
+            updateUserUI();
         };
     </script>
 </body>

@@ -3,49 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyHelper — On-Demand Verified Local Pros & Live Tracking</title>
+    <title>MyHelper — Live Peer Network & Account Saver</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Leaflet.js CSS & JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    
-    <!-- PeerJS for Cross-Device Real-Time Direct Messaging -->
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <!-- Leaflet Map CSS/JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <!-- Firebase JS SDK (Compat Mode for single HTML setup) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
-                    colors: {
-                        brand: {
-                            50: '#eff6ff',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            glow: '#60a5fa'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
         .glass-panel {
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .glass-card {
@@ -53,380 +30,254 @@
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.07);
         }
-        .glass-card:hover {
-            border-color: rgba(59, 130, 246, 0.4);
-            box-shadow: 0 12px 30px -10px rgba(59, 130, 246, 0.2);
-        }
-        .glow-effect {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
-            pointer-events: none;
-        }
-        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-            background: #0f172a !important;
-            color: #f8fafc !important;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1rem !important;
-        }
-        .leaflet-container {
-            font-family: 'Plus Jakarta Sans', sans-serif !important;
-            background: #020617 !important;
-        }
         .custom-pin {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background: #2563eb;
             color: white;
             border: 3px solid #0f172a;
             box-shadow: 0 0 15px rgba(37, 99, 235, 0.6);
-            cursor: pointer;
-            transition: transform 0.2s ease;
         }
-        .custom-pin-pro {
-            background: linear-gradient(135deg, #f59e0b, #d97706) !important;
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.8) !important;
-        }
-        .custom-pin:hover {
-            transform: scale(1.2);
-        }
-        .chat-scroll::-webkit-scrollbar {
-            width: 6px;
-        }
-        .chat-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
+        .chat-scroll::-webkit-scrollbar { width: 5px; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen selection:bg-blue-500 selection:text-white relative overflow-x-hidden">
-
-    <!-- Background Glow Elements -->
-    <div class="glow-effect -top-20 -left-20"></div>
-    <div class="glow-effect top-1/3 -right-20"></div>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen">
 
     <!-- Navigation Bar -->
-    <nav class="glass-panel sticky top-0 z-40 transition-all duration-300">
+    <nav class="glass-panel sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            
-            <!-- Brand Logo -->
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="resetFilters()">
-                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-amber-500 flex items-center justify-center shadow-lg shadow-blue-500/25">
-                    <i class="fa-solid fa-crown text-white text-lg"></i>
+            <div class="flex items-center space-x-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
+                    <i class="fa-solid fa-handshake text-white text-lg"></i>
                 </div>
-                <div class="flex flex-col">
-                    <span class="text-2xl font-extrabold tracking-tight text-white leading-none">My<span class="text-blue-500">Helper</span></span>
-                    <span class="text-[10px] font-semibold text-amber-400 tracking-widest uppercase mt-1">PRO Network & Live Messaging</span>
+                <div>
+                    <span class="text-2xl font-extrabold text-white leading-none">My<span class="text-blue-500">Helper</span></span>
+                    <span class="block text-[10px] font-semibold text-emerald-400 tracking-widest uppercase">● Live Network & Account Saver</span>
                 </div>
             </div>
 
-            <!-- Action Buttons -->
             <div class="flex items-center space-x-2 sm:space-x-3">
-                
-                <!-- INBOX BUTTON WITH LIVE BADGE -->
-                <button onclick="openInboxModal()" class="relative bg-slate-900 border border-slate-800 hover:border-blue-500/50 text-xs font-semibold text-slate-200 px-3.5 py-2.5 rounded-xl transition flex items-center space-x-2">
-                    <i class="fa-solid fa-inbox text-blue-400"></i>
-                    <span class="hidden sm:inline">Inbox</span>
-                    <span id="inboxCountBadge" class="hidden bg-rose-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">0</span>
+                <!-- Account Saver Trigger Badge -->
+                <button onclick="openModal('accountModal')" class="bg-slate-900 border border-slate-800 hover:border-slate-700 px-3 py-1.5 rounded-xl flex items-center space-x-2 transition">
+                    <i class="fa-solid fa-user-shield text-blue-400 text-xs"></i>
+                    <span class="text-xs text-slate-300 hidden sm:inline">Account: <strong id="navUsername" class="text-blue-400">Loading...</strong></span>
+                    <span class="text-[10px] bg-blue-600/30 text-blue-300 px-1.5 py-0.5 rounded font-mono">Saver</span>
                 </button>
 
-                <!-- Account Status / Logged In Indicator -->
-                <div id="userStatusBox" class="hidden items-center space-x-2 bg-slate-900 border border-amber-500/30 px-3 py-1.5 rounded-xl">
-                    <i class="fa-solid fa-user-shield text-amber-400 text-xs"></i>
-                    <span id="loggedInName" class="text-xs font-bold text-slate-200">Guest</span>
-                    <button onclick="logout()" class="text-[10px] text-rose-400 hover:underline ml-1">(Logout)</button>
-                </div>
-
-                <button onclick="openModal('loginModal')" id="loginBtn" class="inline-flex items-center text-xs font-semibold text-slate-300 hover:text-white transition px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800">
-                    <i class="fa-solid fa-right-to-bracket mr-1.5 text-blue-400"></i> Log In
+                <!-- Post Request/Service Button -->
+                <button onclick="openModal('postModal')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl transition shadow-lg shadow-emerald-600/25 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="hidden md:inline">Post Listing</span>
                 </button>
 
-                <button onclick="openModal('subscriptionModal')" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 text-xs sm:text-sm font-black px-3.5 py-2.5 rounded-xl transition shadow-lg shadow-amber-500/20 flex items-center space-x-1.5">
-                    <i class="fa-solid fa-bolt"></i>
-                    <span>Pro ($1/mo)</span>
-                </button>
-
-                <button onclick="openModal('proModal')" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-blue-600/25 flex items-center space-x-2 border border-blue-400/20">
-                    <i class="fa-solid fa-user-plus"></i>
-                    <span class="hidden sm:inline">Register Helper</span>
+                <!-- Join Room Button -->
+                <button onclick="openModal('roomModal')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl transition shadow-lg shadow-blue-600/25 flex items-center space-x-1.5">
+                    <i class="fa-solid fa-comments"></i>
+                    <span class="hidden md:inline">Join Room</span>
                 </button>
             </div>
         </div>
     </nav>
 
-    <!-- Hero / Search Section -->
-    <header class="relative pt-8 pb-10 px-4 border-b border-slate-800/80">
-        <div class="max-w-4xl mx-auto text-center relative z-10">
-            
-            <div class="inline-flex items-center space-x-2 bg-amber-500/10 border border-amber-500/20 px-3.5 py-1.5 rounded-full text-amber-400 text-xs font-semibold mb-4 backdrop-blur-md">
-                <i class="fa-solid fa-crown text-amber-400 text-xs"></i>
-                <span>PRO Network Active — Real-Time Cross-Device Chat Connected</span>
+    <!-- Main Workspace -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Search & Category Filters -->
+        <div class="glass-panel p-4 rounded-2xl mb-8 flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div class="relative w-full md:w-96">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500 text-xs"></i>
+                <input type="text" id="searchInput" oninput="filterListings()" placeholder="Search active listings..." class="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
             </div>
 
-            <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-4 tracking-tight leading-tight">
-                Hire Verified Local Helpers & <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-blue-400 to-indigo-400">Chat In Real-Time</span>
-            </h1>
-
-            <!-- Search Panel -->
-            <div class="glass-panel p-2.5 rounded-2xl shadow-2xl max-w-2xl mx-auto flex flex-col sm:flex-row gap-2">
-                <div class="flex-grow flex items-center bg-slate-900/80 rounded-xl px-4 py-3 border border-slate-800 focus-within:border-blue-500 transition">
-                    <i class="fa-solid fa-magnifying-glass text-blue-500 mr-3 text-sm"></i>
-                    <input type="text" id="searchInput" onkeyup="filterPros()" placeholder="Search by job (e.g. Plumbing, Wiring, Locksmith) or name..." class="bg-transparent w-full text-slate-100 placeholder-slate-500 focus:outline-none text-sm font-medium">
-                </div>
-                <button onclick="filterPros()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 rounded-xl transition text-sm shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2">
-                    <span>Search</span>
-                </button>
-            </div>
-
-            <!-- Category Pills -->
-            <div class="flex flex-wrap justify-center gap-2 mt-4">
-                <button onclick="filterByCategory('All')" class="cat-pill bg-blue-600 text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl transition shadow-md">All</button>
-                <button onclick="filterByCategory('Master Pro / Multi-Trade')" class="cat-pill bg-slate-900 border border-amber-500/40 text-amber-300 hover:border-amber-400 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition">👑 Master Pro</button>
-                <button onclick="filterByCategory('Plumbing')" class="cat-pill bg-slate-900 border border-slate-800 text-slate-300 hover:border-blue-500/50 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition">🚰 Plumbing</button>
-                <button onclick="filterByCategory('Electrical')" class="cat-pill bg-slate-900 border border-slate-800 text-slate-300 hover:border-blue-500/50 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition">⚡ Electrical</button>
-                <button onclick="filterByCategory('AC Repair')" class="cat-pill bg-slate-900 border border-slate-800 text-slate-300 hover:border-blue-500/50 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition">❄️ AC Repair</button>
+            <div class="flex items-center space-x-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+                <button onclick="setCategoryFilter('all')" class="cat-btn bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg font-medium whitespace-nowrap">All</button>
+                <button onclick="setCategoryFilter('Plumbing')" class="cat-btn bg-slate-900 border border-slate-800 text-slate-300 text-xs px-3 py-1.5 rounded-lg font-medium whitespace-nowrap">Plumbing</button>
+                <button onclick="setCategoryFilter('Electrical')" class="cat-btn bg-slate-900 border border-slate-800 text-slate-300 text-xs px-3 py-1.5 rounded-lg font-medium whitespace-nowrap">Electrical</button>
+                <button onclick="setCategoryFilter('Tech Support')" class="cat-btn bg-slate-900 border border-slate-800 text-slate-300 text-xs px-3 py-1.5 rounded-lg font-medium whitespace-nowrap">Tech Support</button>
+                <button onclick="setCategoryFilter('General')" class="cat-btn bg-slate-900 border border-slate-800 text-slate-300 text-xs px-3 py-1.5 rounded-lg font-medium whitespace-nowrap">General Help</button>
             </div>
         </div>
-    </header>
 
-    <!-- Split Screen Directory & Interactive Map -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
-            <!-- LEFT COLUMN: Directory Cards (7 Columns) -->
-            <div class="lg:col-span-7 space-y-6">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h2 id="sectionTitle" class="text-xl font-extrabold text-white tracking-tight">Active Helper Directory</h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Click "Chat" to message in real-time or check your Inbox</p>
-                    </div>
-                    <span id="activeCount" class="text-xs font-semibold bg-slate-900 text-blue-400 px-3 py-1.5 rounded-lg border border-slate-800">0 Active</span>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Dynamic Listings Feed (7 cols) -->
+            <div class="lg:col-span-7 space-y-4">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-lg font-extrabold text-white flex items-center gap-2">
+                        <span>Live Peer Listings</span>
+                        <span id="listingCount" class="bg-blue-600/20 text-blue-400 text-xs px-2 py-0.5 rounded-full border border-blue-500/30">0 active</span>
+                    </h2>
+                    <span class="text-xs text-slate-400"><i class="fa-solid fa-arrows-rotate text-emerald-400 animate-spin mr-1"></i> Syncing Live</span>
                 </div>
 
-                <div id="proGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Dynamic JavaScript Cards -->
+                <div id="listingsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Dynamic real entries render here -->
                 </div>
             </div>
 
-            <!-- RIGHT COLUMN: Sticky Leaflet Map (5 Columns) -->
-            <div class="lg:col-span-5 sticky top-24">
-                <div class="glass-panel p-3 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
-                    <div class="flex justify-between items-center px-3 py-2 mb-2">
-                        <div class="flex items-center space-x-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span class="text-xs font-bold text-white uppercase tracking-wider">Live Map Dispatch</span>
-                        </div>
-                        <button onclick="resetMapView()" class="text-[10px] text-blue-400 hover:underline">Reset View</button>
+            <!-- Interactive Map (5 cols) -->
+            <div class="lg:col-span-5">
+                <div class="glass-panel p-3 rounded-3xl sticky top-28">
+                    <div class="flex justify-between items-center px-2 py-1 mb-2">
+                        <span class="text-xs font-bold text-white uppercase tracking-wider"><i class="fa-solid fa-map-pin text-blue-500 mr-1"></i> Live Map Dispatch</span>
+                        <span class="text-[10px] text-slate-400">Click map to set post coordinates</span>
                     </div>
-                    
-                    <!-- Leaflet Container -->
-                    <div id="map" class="h-[420px] lg:h-[520px] w-full rounded-2xl z-10"></div>
+                    <div id="map" class="h-[450px] w-full rounded-2xl z-10"></div>
                 </div>
             </div>
-
         </div>
     </main>
 
-    <!-- INBOX MODAL / DRAWER -->
-    <div id="inboxModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
-        <div class="glass-panel border border-slate-800 rounded-3xl max-w-lg w-full h-[550px] flex flex-col relative shadow-2xl my-auto overflow-hidden">
-            
-            <div class="p-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center">
-                        <i class="fa-solid fa-inbox text-base"></i>
+    <!-- TEXT ACCOUNT SAVER & PROFILE MODAL -->
+    <div id="accountModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6">
+        <div class="glass-panel border border-slate-800 rounded-3xl max-w-lg w-full p-6 relative max-h-[90vh] overflow-y-auto chat-scroll">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk text-blue-500"></i>
+                    <span>Text Account Saver & Profile</span>
+                </h3>
+                <button onclick="closeModal('accountModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <p class="text-xs text-slate-400 mb-4">Your account data is automatically saved locally. You can also export/import your account as a plain text key to back it up or move to another device!</p>
+
+            <form onsubmit="saveAccountProfile(event)" class="space-y-3 mb-6">
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Display Username</label>
+                    <input type="text" id="accUsername" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">Contact Phone (Optional)</label>
+                        <input type="text" id="accPhone" placeholder="+1234567890" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
                     </div>
                     <div>
-                        <h3 class="text-base font-extrabold text-white leading-none">Messages & Inbox</h3>
-                        <span id="inboxSubtext" class="text-[10px] text-slate-400">Your active real-time conversations</span>
+                        <label class="block text-[11px] text-slate-400 mb-1">Preferred Trade / Skill</label>
+                        <input type="text" id="accSkill" placeholder="e.g. Electrician / Helper" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
                     </div>
                 </div>
-                <button onclick="closeModal('inboxModal')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
-                    <i class="fa-solid fa-xmark"></i>
+
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1">Bio / Notes</label>
+                    <textarea id="accBio" rows="2" placeholder="Write something about your services or requests..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-xl transition">
+                    <i class="fa-solid fa-save mr-1"></i> Save Profile Details
                 </button>
-            </div>
+            </form>
 
-            <div id="inboxThreadList" class="flex-grow p-4 space-y-2 overflow-y-auto chat-scroll">
-                <!-- Thread Items Render Dynamically -->
-            </div>
+            <hr class="border-slate-800 my-4">
 
-            <div class="p-3 bg-slate-900/90 border-t border-slate-800 text-center">
-                <p class="text-[11px] text-slate-400"><i class="fa-solid fa-bolt text-amber-400 mr-1"></i> Messages update live across tabs & peer connections.</p>
+            <!-- TEXT KEY EXPORT / IMPORT -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-key text-amber-400 mr-1"></i> Export & Import Account Key String</h4>
+                
+                <div class="flex gap-2">
+                    <button onclick="exportAccountKey()" class="w-1/2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold py-2 rounded-xl transition">
+                        <i class="fa-solid fa-copy mr-1"></i> Copy Text Key
+                    </button>
+                    <button onclick="importAccountKey()" class="w-1/2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 text-xs font-bold py-2 rounded-xl transition">
+                        <i class="fa-solid fa-download mr-1"></i> Import Text Key
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] text-slate-500 mb-1">Account Text Key Output / Input:</label>
+                    <textarea id="accTextKeyArea" rows="2" placeholder="Click 'Copy Text Key' to generate string, or paste string here and click 'Import Text Key'" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-[10px] font-mono text-slate-400 focus:outline-none focus:border-blue-500"></textarea>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL 1: REGISTER PRO MODAL -->
-    <div id="proModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
-        <div class="glass-panel border border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 relative shadow-2xl my-auto">
-            <button onclick="closeModal('proModal')" class="absolute top-6 right-6 w-9 h-9 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <div class="mb-6">
-                <span class="bg-blue-500/10 text-blue-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-blue-500/20">Helper Registration</span>
-                <h3 class="text-2xl font-extrabold text-white mt-2">Create Helper Account</h3>
-                <p class="text-xs text-slate-400 mt-1">Creating an account saves a backup `.txt` file onto your device.</p>
+    <!-- POST LISTING MODAL -->
+    <div id="postModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6">
+        <div class="glass-panel border border-slate-800 rounded-3xl max-w-md w-full p-6 relative">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-bold text-white"><i class="fa-solid fa-circle-plus text-emerald-500 mr-2"></i>Post Request or Service</h3>
+                <button onclick="closeModal('postModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <form onsubmit="handleRegistration(event)" class="space-y-4 text-xs">
+            <form onsubmit="submitNewListing(event)" class="space-y-3">
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Full Name / Account Username</label>
-                    <input type="text" id="regName" required placeholder="e.g. Alex Miller" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                    <label class="block text-[11px] text-slate-400 mb-1">Title / Service Name</label>
+                    <input type="text" id="postTitle" required placeholder="e.g. Quick PC Repair or Lawn Mowing" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
                 </div>
 
-                <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Account Password</label>
-                    <input type="password" id="regPassword" required placeholder="Create a secure password" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
-                </div>
-
-                <div>
-                    <label class="block font-semibold text-amber-400 mb-1">Jobs You Do (Separated by commas)</label>
-                    <input type="text" id="regJobs" required placeholder="e.g. Pipe Leak Repair, Circuit Installation, AC Maintenance" class="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-amber-400 transition">
-                </div>
-                
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block font-semibold text-slate-300 mb-1">Primary Category</label>
-                        <select id="regCategory" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                        <label class="block text-[11px] text-slate-400 mb-1">Category</label>
+                        <select id="postCategory" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                            <option value="General">General Help</option>
                             <option value="Plumbing">Plumbing</option>
                             <option value="Electrical">Electrical</option>
-                            <option value="AC Repair">AC Repair</option>
-                            <option value="Tech Setup">Tech Setup</option>
+                            <option value="Tech Support">Tech Support</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block font-semibold text-slate-300 mb-1">Hourly Rate ($ USD)</label>
-                        <input type="number" id="regRate" required placeholder="65" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                        <label class="block text-[11px] text-slate-400 mb-1">Rate / Budget ($/hr)</label>
+                        <input type="number" id="postRate" required placeholder="25" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Phone Number</label>
-                    <input type="tel" id="regPhone" required placeholder="+1 (555) 019-2834" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                    <label class="block text-[11px] text-slate-400 mb-1">Description</label>
+                    <textarea id="postDesc" rows="2" required placeholder="Describe what help you need or offer..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"></textarea>
                 </div>
 
-                <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Profile Avatar Link (URL)</label>
-                    <input type="url" id="regImg" required placeholder="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">Latitude</label>
+                        <input type="number" step="any" id="postLat" required value="40.7128" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-400 mb-1">Longitude</label>
+                        <input type="number" step="any" id="postLng" required value="-74.0060" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Bio / Overview</label>
-                    <textarea id="regBio" rows="2" required placeholder="Describe your experience..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition resize-none"></textarea>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeModal('postModal')" class="bg-slate-800 text-slate-300 text-xs px-4 py-2 rounded-xl">Cancel</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl">Publish Live</button>
                 </div>
-
-                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 rounded-xl transition text-sm shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-file-arrow-down"></i>
-                    <span>Register & Download Account .TXT</span>
-                </button>
             </form>
         </div>
     </div>
 
-    <!-- MODAL 2: PAY TO BE A PRO MODAL ($1/MONTH) -->
-    <div id="subscriptionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
-        <div class="glass-panel border border-amber-500/40 rounded-3xl max-w-md w-full p-6 sm:p-8 relative shadow-2xl my-auto text-center">
-            <button onclick="closeModal('subscriptionModal')" class="absolute top-6 right-6 w-9 h-9 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <div class="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-amber-500/20">
-                <i class="fa-solid fa-crown text-2xl text-slate-950"></i>
-            </div>
-
-            <span class="bg-amber-500/10 text-amber-400 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase border border-amber-500/30">Pro Membership</span>
-            <h3 class="text-2xl font-black text-white mt-2">Pay to be a PRO</h3>
-            <p class="text-xs text-slate-400 mt-1">Get top dispatch priority, gold badge, and list unlimited custom jobs.</p>
-
-            <div class="my-6 p-4 rounded-2xl bg-slate-900 border border-slate-800">
-                <div class="text-3xl font-black text-white">$1 <span class="text-xs font-semibold text-slate-400">/ month</span></div>
-                <p class="text-[11px] text-emerald-400 font-semibold mt-1"><i class="fa-solid fa-check mr-1"></i> Cancel anytime. Instant activation.</p>
-            </div>
-
-            <ul class="text-left space-y-2 text-xs text-slate-300 mb-6 bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
-                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-400 mr-2"></i> Verified Gold PRO Badge on Map & Profile</li>
-                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-400 mr-2"></i> Rank top on client search results</li>
-                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-400 mr-2"></i> Add unlimited custom jobs you do</li>
-            </ul>
-
-            <button onclick="processProSubscription()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black py-3.5 rounded-xl transition text-sm shadow-xl shadow-amber-500/25 flex items-center justify-center space-x-2">
-                <i class="fa-solid fa-credit-card"></i>
-                <span>Subscribe for $1 / Month</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- MODAL 3: LOGIN MODAL -->
-    <div id="loginModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
-        <div class="glass-panel border border-slate-800 rounded-3xl max-w-sm w-full p-6 relative shadow-2xl my-auto">
-            <button onclick="closeModal('loginModal')" class="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <div class="mb-5 text-center">
-                <div class="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center mx-auto mb-2 text-blue-400">
-                    <i class="fa-solid fa-shield-halved text-xl"></i>
-                </div>
-                <h3 class="text-xl font-extrabold text-white">Helper Login</h3>
-                <p class="text-xs text-slate-400">Log into your helper account or Owner demo</p>
-            </div>
-
-            <form onsubmit="handleLogin(event)" class="space-y-3.5 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Username / Name</label>
-                    <input type="text" id="loginUser" required placeholder="e.g. the owner" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-blue-500 transition">
-                </div>
-
-                <div>
-                    <label class="block font-semibold text-slate-300 mb-1">Password</label>
-                    <input type="password" id="loginPass" required placeholder="e.g. @owerguy67" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 focus:outline-none focus:border-blue-500 transition">
-                </div>
-
-                <div class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300">
-                    <span class="font-bold">Owner Demo Credentials:</span><br>
-                    User: <code class="text-white bg-slate-900 px-1 rounded">the owner</code> | Pass: <code class="text-white bg-slate-900 px-1 rounded">@owerguy67</code>
-                </div>
-
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition text-xs shadow-lg shadow-blue-600/30">
-                    Log In To Account
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL 4: LIVE CHAT MODAL -->
-    <div id="chatModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
-        <div class="glass-panel border border-slate-800 rounded-3xl max-w-md w-full h-[550px] flex flex-col relative shadow-2xl my-auto overflow-hidden">
+    <!-- REAL-TIME CHAT MODAL -->
+    <div id="chatModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6">
+        <div class="glass-panel border border-slate-800 rounded-3xl max-w-md w-full h-[580px] flex flex-col relative shadow-2xl overflow-hidden">
             
-            <!-- Chat Header -->
+            <!-- Header -->
             <div class="p-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <img id="chatAvatar" src="" class="w-10 h-10 rounded-xl object-cover border border-slate-700">
+                    <div id="chatAvatar" class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
                     <div>
-                        <h4 id="chatName" class="text-sm font-bold text-white leading-none">Helper Name</h4>
-                        <span id="chatCategory" class="text-[10px] text-blue-400 font-semibold uppercase">Category</span>
+                        <h4 id="chatTitle" class="text-sm font-bold text-white">Live Channel</h4>
+                        <p class="text-[10px] text-emerald-400 font-medium">● Firebase Realtime Sync</p>
                     </div>
                 </div>
-                <button onclick="closeModal('chatModal')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+                <button onclick="closeModal('chatModal')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            <!-- Message Area -->
+            <!-- Messages Stream -->
             <div id="chatMessages" class="flex-grow p-4 space-y-3 overflow-y-auto chat-scroll text-xs">
-                <!-- Messages render dynamically -->
+                <div class="text-center text-slate-500 my-4">Connecting to live cloud stream...</div>
             </div>
 
-            <!-- Chat Input Box -->
-            <form onsubmit="sendChatMessage(event)" class="p-3 bg-slate-900/90 border-t border-slate-800 flex items-center space-x-2">
-                <input type="text" id="chatInput" placeholder="Type a live message..." required class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-slate-100 text-xs focus:outline-none focus:border-blue-500 transition">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white w-9 h-9 rounded-xl flex items-center justify-center transition shadow-lg shadow-blue-600/30">
+            <!-- Message Form -->
+            <form onsubmit="sendRealMessage(event)" class="p-3 bg-slate-900/90 border-t border-slate-800 flex items-center space-x-2">
+                <input type="text" id="chatInput" placeholder="Type a message..." required autocomplete="off" class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-slate-100 text-xs focus:outline-none focus:border-blue-500">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/30">
                     <i class="fa-solid fa-paper-plane text-xs"></i>
                 </button>
             </form>
@@ -434,623 +285,322 @@
         </div>
     </div>
 
-    <!-- Application Logic & Real-time Chat Engine -->
+    <!-- CUSTOM ROOM MODAL -->
+    <div id="roomModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4">
+        <div class="glass-panel border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center">
+            <h3 class="text-lg font-bold text-white mb-2">Join a Live Chat Room</h3>
+            <p class="text-xs text-slate-400 mb-4">Enter any room code to chat with friends or peers in real-time!</p>
+            
+            <input type="text" id="customRoomInput" placeholder="e.g. room-999" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white text-xs mb-4 focus:outline-none focus:border-blue-500">
+            
+            <div class="flex gap-2">
+                <button onclick="closeModal('roomModal')" class="w-1/2 bg-slate-800 text-slate-300 text-xs font-bold py-2.5 rounded-xl">Cancel</button>
+                <button onclick="joinCustomRoom()" class="w-1/2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-xl">Join</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // FIREBASE CONFIGURATION (REPLACE WITH YOUR FREE FIREBASE PROJECT KEYS IF DESIRED)
+        // 1. INITIALIZE REALTIME CLOUD DATABASE
         const firebaseConfig = {
-            apiKey: "OPTIONAL_FIREBASE_API_KEY",
-            authDomain: "myhelper-app.firebaseapp.com",
-            databaseURL: "https://myhelper-app-default-rtdb.firebaseio.com",
-            projectId: "myhelper-app",
-            storageBucket: "myhelper-app.appspot.com",
-            messagingSenderId: "1234567890",
-            appId: "1:1234567890:web:abcdef123456"
+            databaseURL: "https://myhelper-realtime-default-rtdb.firebaseio.com/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 2. TEXT ACCOUNT SAVER ENGINE
+        let myAccount = {
+            username: 'User_' + Math.floor(1000 + Math.random() * 9000),
+            phone: '',
+            skill: '',
+            bio: ''
         };
 
-        let useFirebase = false;
-        try {
-            if (firebaseConfig.apiKey !== "OPTIONAL_FIREBASE_API_KEY") {
-                firebase.initializeApp(firebaseConfig);
-                useFirebase = true;
-                console.log("Connected to Firebase Cloud Database!");
+        function loadAccountProfile() {
+            const saved = localStorage.getItem('myhelper_account_saver');
+            if (saved) {
+                try {
+                    myAccount = JSON.parse(saved);
+                } catch(e) {}
             }
-        } catch (e) {
-            useFirebase = false;
+            updateAccountUI();
         }
 
-        // BroadcastChannel for instant multi-tab live chat without Firebase keys
-        const chatChannel = new BroadcastChannel('myhelper_live_chat_channel');
-
-        const defaultCenter = [40.7128, -74.0060];
-        
-        // DEFAULT DEMO OWNER ACCOUNT WITH MANY JOBS
-        const ownerDemoAccount = {
-            id: "999001",
-            name: "the owner",
-            password: "@owerguy67",
-            category: "Master Pro / Multi-Trade",
-            rate: "150",
-            phone: "+1 (555) 019-9999",
-            img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
-            bio: "Official Platform Owner & Verified Master Pro. Equipped for large residential and commercial jobs.",
-            lat: 40.7128,
-            lng: -74.0060,
-            icon: "fa-crown",
-            isPro: true,
-            jobs: [
-                "Full House Plumbing Overhaul",
-                "Smart Home Electrical Wiring",
-                "HVAC System Repair & Installation",
-                "Emergency Locksmith & Access Control",
-                "Solar Panel Setup & Grid Integration"
-            ]
-        };
-
-        // Initialize Local Storage state
-        let pros = JSON.parse(localStorage.getItem('myhelper_map_pros')) || [];
-        
-        // Ensure Owner Account is always present in pros list
-        if (!pros.some(p => String(p.name).toLowerCase() === 'the owner')) {
-            pros.unshift(ownerDemoAccount);
-            localStorage.setItem('myhelper_map_pros', JSON.stringify(pros));
+        function updateAccountUI() {
+            document.getElementById('navUsername').innerText = myAccount.username;
+            document.getElementById('accUsername').value = myAccount.username;
+            document.getElementById('accPhone').value = myAccount.phone || '';
+            document.getElementById('accSkill').value = myAccount.skill || '';
+            document.getElementById('accBio').value = myAccount.bio || '';
         }
 
-        let currentUser = JSON.parse(localStorage.getItem('myhelper_current_user')) || { 
-            name: 'Client Guest', 
-            id: 'guest_' + Math.random().toString(36).substr(2, 6) 
-        };
+        function saveAccountProfile(e) {
+            if(e) e.preventDefault();
+            myAccount.username = document.getElementById('accUsername').value.trim() || myAccount.username;
+            myAccount.phone = document.getElementById('accPhone').value.trim();
+            myAccount.skill = document.getElementById('accSkill').value.trim();
+            myAccount.bio = document.getElementById('accBio').value.trim();
 
-        let activeChatPartner = null;
-        let map, markersGroup;
-        let peer = null;
-        let peerConn = null;
+            localStorage.setItem('myhelper_account_saver', JSON.stringify(myAccount));
+            updateAccountUI();
+            alert("Account Profile Saved!");
+            closeModal('accountModal');
+        }
 
-        // PeerJS P2P Connection Engine
-        function initPeerEngine() {
-            const sanitizedPeerId = ('myhelper-' + currentUser.name.toLowerCase().replace(/[^a-z0-9]/g, '')).substr(0, 30);
+        function exportAccountKey() {
+            const keyString = btoa(JSON.stringify(myAccount));
+            const area = document.getElementById('accTextKeyArea');
+            area.value = keyString;
+            area.select();
+            navigator.clipboard.writeText(keyString);
+            alert("Account Text Key copied to clipboard! Keep this text key safe to restore your profile on any device.");
+        }
+
+        function importAccountKey() {
+            const area = document.getElementById('accTextKeyArea');
+            const keyString = area.value.trim();
+            if(!keyString) return alert("Please paste an account text key string into the text area first!");
+
             try {
-                peer = new Peer(sanitizedPeerId, {
-                    config: {
-                        iceServers: [
-                            { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' }
-                        ]
-                    }
-                });
-
-                peer.on('connection', (conn) => {
-                    peerConn = conn;
-                    peerConn.on('data', (data) => {
-                        receiveIncomingMessage(data);
-                    });
-                });
-            } catch (err) {
-                console.log("PeerJS fallback mode active.");
+                const decoded = JSON.parse(atob(keyString));
+                if(decoded && decoded.username) {
+                    myAccount = decoded;
+                    localStorage.setItem('myhelper_account_saver', JSON.stringify(myAccount));
+                    updateAccountUI();
+                    alert("Account Key Restored Successfully as: " + myAccount.username);
+                } else {
+                    alert("Invalid Account Key format!");
+                }
+            } catch(e) {
+                alert("Could not parse Account Key string!");
             }
         }
 
-        // Initialize Map
-        function initMap() {
-            map = L.map('map', { zoomControl: false }).setView(defaultCenter, 12);
-            L.control.zoom({ position: 'bottomright' }).addTo(map);
+        // Global App State
+        let map;
+        let markersGroup;
+        let allListings = [];
+        let currentCategory = 'all';
+        let currentRoomId = null;
+        let activeRoomRef = null;
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap &copy; CARTO',
-                subdomains: 'abcd',
-                maxZoom: 19
-            }).addTo(map);
-
-            markersGroup = L.layerGroup().addTo(map);
-            updateMapMarkers(pros);
-        }
-
-        function updateMapMarkers(dataList) {
-            if (!markersGroup) return;
-            markersGroup.clearLayers();
-
-            dataList.forEach(p => {
-                const iconClass = p.isPro ? 'fa-crown text-amber-300' : (p.icon || 'fa-hand-holding-hand');
-                const pinClass = p.isPro ? 'custom-pin custom-pin-pro' : 'custom-pin';
-
-                const customIcon = L.divIcon({
-                    className: 'custom-pin-wrapper',
-                    html: `<div class="${pinClass}"><i class="fa-solid ${iconClass} text-xs"></i></div>`,
-                    iconSize: [38, 38],
-                    iconAnchor: [19, 19]
-                });
-
-                const marker = L.marker([p.lat, p.lng], { icon: customIcon });
-                marker.bindPopup(`
-                    <div class="p-2 text-center font-sans">
-                        <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover mx-auto mb-2 border border-slate-700">
-                        <h4 class="font-bold text-sm text-white">${p.name} ${p.isPro ? '👑' : ''}</h4>
-                        <p class="text-xs text-blue-400 font-semibold mb-2">${p.category}</p>
-                        <button onclick="openChatWithPro('${p.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg w-full transition">Chat Live</button>
-                    </div>
-                `);
-                markersGroup.addLayer(marker);
+        // 3. FETCH REAL LIVE LISTINGS FROM FIREBASE
+        function listenToListings() {
+            db.ref('listings').on('value', (snapshot) => {
+                const data = snapshot.val();
+                allListings = [];
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        allListings.push({ id: key, ...data[key] });
+                    });
+                }
+                renderListings();
             });
         }
 
-        // Render Cards in Directory Grid
-        function renderProsGrid(dataList) {
-            const grid = document.getElementById('proGrid');
-            const activeCount = document.getElementById('activeCount');
-            grid.innerHTML = '';
-            activeCount.innerText = `${dataList.length} Active`;
+        // 4. SUBMIT REAL USER LISTING
+        function submitNewListing(e) {
+            e.preventDefault();
+            const title = document.getElementById('postTitle').value.trim();
+            const category = document.getElementById('postCategory').value;
+            const rate = document.getElementById('postRate').value;
+            const desc = document.getElementById('postDesc').value.trim();
+            const lat = parseFloat(document.getElementById('postLat').value) || 40.7128;
+            const lng = parseFloat(document.getElementById('postLng').value) || -74.0060;
 
-            if (dataList.length === 0) {
+            if (!title || !desc) return alert("Please complete all fields!");
+
+            db.ref('listings').push({
+                title: title,
+                category: category,
+                rate: rate,
+                desc: desc,
+                lat: lat,
+                lng: lng,
+                author: myAccount.username,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            closeModal('postModal');
+            document.getElementById('postTitle').value = '';
+            document.getElementById('postDesc').value = '';
+        }
+
+        // 5. RENDER LISTINGS & MAP MARKERS
+        function renderListings() {
+            const grid = document.getElementById('listingsGrid');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filtered = allListings.filter(item => {
+                const matchesCat = currentCategory === 'all' || item.category === currentCategory;
+                const matchesSearch = item.title.toLowerCase().includes(searchVal) || item.desc.toLowerCase().includes(searchVal) || item.author.toLowerCase().includes(searchVal);
+                return matchesCat && matchesSearch;
+            });
+
+            document.getElementById('listingCount').innerText = `${filtered.length} active`;
+            grid.innerHTML = '';
+            
+            if (markersGroup) markersGroup.clearLayers();
+
+            if (filtered.length === 0) {
                 grid.innerHTML = `
-                    <div class="col-span-full glass-card p-8 text-center rounded-2xl">
-                        <i class="fa-solid fa-user-slash text-3xl text-slate-600 mb-2"></i>
-                        <p class="text-slate-400 text-sm">No local helpers match your search filters.</p>
+                    <div class="col-span-full glass-card p-8 rounded-2xl text-center space-y-3">
+                        <i class="fa-solid fa-folder-open text-3xl text-slate-600"></i>
+                        <p class="text-xs text-slate-400">No active listings found.</p>
+                        <button onclick="openModal('postModal')" class="text-xs text-blue-400 underline font-semibold">Be the first to post a real listing</button>
                     </div>
                 `;
                 return;
             }
 
-            dataList.forEach(p => {
-                const jobBadges = (p.jobs || ['General Repair']).map(j => 
-                    `<span class="bg-slate-900 border border-slate-800 text-slate-300 text-[10px] font-medium px-2 py-0.5 rounded-md">${j}</span>`
-                ).join('');
-
-                const proBadge = p.isPro ? `<span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black px-2 py-0.5 rounded-md">👑 PRO</span>` : '';
-
-                const cardHtml = `
-                    <div class="glass-card p-5 rounded-2xl flex flex-col justify-between space-y-4 transition">
+            filtered.forEach(item => {
+                grid.innerHTML += `
+                    <div class="glass-card p-4 rounded-2xl flex flex-col justify-between space-y-3">
                         <div>
-                            <div class="flex items-start justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover border border-slate-700">
-                                    <div>
-                                        <div class="flex items-center space-x-1.5">
-                                            <h3 class="font-extrabold text-white text-sm">${p.name}</h3>
-                                            ${proBadge}
-                                        </div>
-                                        <p class="text-xs text-blue-400 font-semibold">${p.category}</p>
-                                    </div>
-                                </div>
-                                <span class="text-sm font-black text-emerald-400">$${p.rate}<span class="text-[10px] text-slate-400 font-normal">/hr</span></span>
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-blue-500/20 text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-md border border-blue-500/30">${escapeHtml(item.category)}</span>
+                                <span class="text-xs font-extrabold text-emerald-400">$${item.rate}/hr</span>
                             </div>
-
-                            <p class="text-xs text-slate-300 mt-3 line-clamp-2">${p.bio}</p>
-
-                            <div class="flex flex-wrap gap-1 mt-3">
-                                ${jobBadges}
-                            </div>
+                            <h3 class="font-bold text-white text-sm">${escapeHtml(item.title)}</h3>
+                            <p class="text-slate-400 text-xs mt-1 line-clamp-2">${escapeHtml(item.desc)}</p>
                         </div>
-
-                        <div class="pt-2 border-t border-slate-800/80 flex items-center gap-2">
-                            <button onclick="openChatWithPro('${p.id}')" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2 rounded-xl transition flex items-center justify-center space-x-1.5">
-                                <i class="fa-solid fa-comments"></i>
-                                <span>Chat</span>
-                            </button>
-                            <button onclick="locateOnMap(${p.lat}, ${p.lng})" class="bg-slate-900 border border-slate-800 hover:border-blue-500/50 text-slate-300 text-xs py-2 px-3 rounded-xl transition">
-                                <i class="fa-solid fa-location-dot"></i>
+                        
+                        <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                            <span class="text-[10px] text-slate-500">By: <strong class="text-slate-300">${escapeHtml(item.author)}</strong></span>
+                            <button onclick="openLiveChat('${item.id}', '${escapeHtml(item.title)}')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition flex items-center space-x-1.5">
+                                <i class="fa-solid fa-comments text-[10px]"></i>
+                                <span>Chat Live</span>
                             </button>
                         </div>
                     </div>
                 `;
-                grid.innerHTML += cardHtml;
+
+                if (map && markersGroup) {
+                    const icon = L.divIcon({
+                        className: 'custom-pin-wrapper',
+                        html: `<div class="custom-pin"><i class="fa-solid fa-location-dot text-xs"></i></div>`,
+                        iconSize: [36, 36]
+                    });
+                    const marker = L.marker([item.lat, item.lng], { icon })
+                     .bindPopup(`
+                        <div style="color:#fff; padding:2px">
+                            <b style="font-size:12px">${escapeHtml(item.title)}</b><br>
+                            <span style="font-size:10px; color:#a1a1aa">$${item.rate}/hr • ${escapeHtml(item.category)}</span><br>
+                            <button onclick="openLiveChat('${item.id}', '${escapeHtml(item.title)}')" style="background:#2563eb;color:#fff;border:none;padding:4px 8px;border-radius:6px;cursor:pointer;margin-top:6px;font-size:10px">Chat Live</button>
+                        </div>
+                     `);
+                    markersGroup.addLayer(marker);
+                }
             });
         }
 
-        // Navigation & Filtering Logic
-        function filterPros() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = pros.filter(p => 
-                p.name.toLowerCase().includes(query) ||
-                p.category.toLowerCase().includes(query) ||
-                (p.jobs && p.jobs.some(j => j.toLowerCase().includes(query)))
-            );
-            renderProsGrid(filtered);
-            updateMapMarkers(filtered);
+        function filterListings() {
+            renderListings();
         }
 
-        function filterByCategory(cat) {
-            document.querySelectorAll('.cat-pill').forEach(btn => {
-                btn.className = 'cat-pill bg-slate-900 border border-slate-800 text-slate-300 hover:border-blue-500/50 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition';
+        function setCategoryFilter(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-slate-900', 'text-slate-300', 'border', 'border-slate-800');
             });
-            event.target.className = 'cat-pill bg-blue-600 text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl transition shadow-md';
-
-            if (cat === 'All') {
-                renderProsGrid(pros);
-                updateMapMarkers(pros);
-            } else {
-                const filtered = pros.filter(p => p.category === cat);
-                renderProsGrid(filtered);
-                updateMapMarkers(filtered);
-            }
+            event.target.classList.remove('bg-slate-900', 'text-slate-300', 'border', 'border-slate-800');
+            event.target.classList.add('bg-blue-600', 'text-white');
+            renderListings();
         }
 
-        function resetFilters() {
-            document.getElementById('searchInput').value = '';
-            filterByCategory('All');
-        }
-
-        function locateOnMap(lat, lng) {
-            if (map) {
-                map.flyTo([lat, lng], 15, { duration: 1.2 });
-            }
-        }
-
-        function resetMapView() {
-            if (map) {
-                map.flyTo(defaultCenter, 12);
-            }
-        }
-
-        // Modal Handlers
-        function openModal(id) {
-            document.getElementById(id).classList.remove('hidden');
-            document.getElementById(id).classList.add('flex');
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-            document.getElementById(id).classList.remove('flex');
-        }
-
-        // Real-Time Chat Engine Logic
-        function openChatWithPro(proId) {
-            const foundPro = pros.find(p => String(p.id) === String(proId));
-            if (!foundPro) return;
-
-            activeChatPartner = foundPro;
-            document.getElementById('chatAvatar').src = foundPro.img;
-            document.getElementById('chatName').innerText = foundPro.name;
-            document.getElementById('chatCategory').innerText = foundPro.category;
-
-            renderActiveChatHistory();
+        // 6. REAL-TIME CHAT ENGINE
+        function openLiveChat(roomId, roomTitle) {
+            currentRoomId = roomId;
+            document.getElementById('chatTitle').innerText = roomTitle;
+            document.getElementById('chatMessages').innerHTML = '<div class="text-center text-slate-500 my-4">Connecting to room stream...</div>';
+            
             openModal('chatModal');
-            markMessagesAsRead(foundPro.id);
+
+            if (activeRoomRef) activeRoomRef.off();
+
+            activeRoomRef = db.ref('chats/' + currentRoomId);
+            activeRoomRef.limitToLast(50).on('value', (snapshot) => {
+                const container = document.getElementById('chatMessages');
+                container.innerHTML = '';
+                
+                const data = snapshot.val();
+                if (!data) {
+                    container.innerHTML = `<div class="text-center text-slate-500 my-8">No messages yet in <strong>${escapeHtml(roomTitle)}</strong>.<br>Send a message below!</div>`;
+                    return;
+                }
+
+                Object.values(data).forEach(msg => {
+                    const isMe = msg.sender === myAccount.username;
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
+                    
+                    msgDiv.innerHTML = `
+                        <div class="flex items-center space-x-1 mb-1">
+                            <span class="text-[10px] font-bold ${isMe ? 'text-blue-400' : 'text-amber-400'}">${escapeHtml(msg.sender)}</span>
+                            <span class="text-[9px] text-slate-500">${msg.time}</span>
+                        </div>
+                        <div class="max-w-[80%] px-3.5 py-2 rounded-2xl ${isMe ? 'bg-blue-600 text-white rounded-br-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none'}">
+                            <p class="text-xs leading-relaxed">${escapeHtml(msg.text)}</p>
+                        </div>
+                    `;
+                    container.appendChild(msgDiv);
+                });
+
+                container.scrollTop = container.scrollHeight;
+            });
         }
 
-        function getStoredMessages() {
-            return JSON.parse(localStorage.getItem('myhelper_chat_messages')) || [];
-        }
-
-        function saveMessageToStorage(msgObj) {
-            const msgs = getStoredMessages();
-            msgs.push(msgObj);
-            localStorage.setItem('myhelper_chat_messages', JSON.stringify(msgs));
-            updateInboxBadgeCount();
-        }
-
-        function sendChatMessage(event) {
-            event.preventDefault();
+        function sendRealMessage(e) {
+            e.preventDefault();
             const input = document.getElementById('chatInput');
             const text = input.value.trim();
-            if (!text || !activeChatPartner) return;
+            if (!text || !currentRoomId) return;
 
-            const newMsg = {
-                id: 'msg_' + Date.now(),
-                senderId: currentUser.id,
-                senderName: currentUser.name,
-                receiverId: activeChatPartner.id,
-                receiverName: activeChatPartner.name,
+            db.ref('chats/' + currentRoomId).push({
+                sender: myAccount.username,
                 text: text,
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                read: true
-            };
-
-            saveMessageToStorage(newMsg);
-            renderActiveChatHistory();
-
-            // 1. Multi-Tab Synchronizer
-            chatChannel.postMessage({ type: 'NEW_CHAT_MESSAGE', payload: newMsg });
-
-            // 2. PeerJS Direct Connection fallback
-            if (peer && peerConn && peerConn.open) {
-                peerConn.send(newMsg);
-            }
-
-            // 3. Simulated AI/Helper Auto-Response for smooth UX test
-            setTimeout(() => {
-                if (activeChatPartner) {
-                    const replyMsg = {
-                        id: 'msg_' + (Date.now() + 1),
-                        senderId: activeChatPartner.id,
-                        senderName: activeChatPartner.name,
-                        receiverId: currentUser.id,
-                        receiverName: currentUser.name,
-                        text: `Thanks for reaching out! I can certainly assist you with ${activeChatPartner.category.toLowerCase()} tasks. When would you like to schedule?`,
-                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                        read: false
-                    };
-                    saveMessageToStorage(replyMsg);
-                    renderActiveChatHistory();
-                    updateInboxBadgeCount();
-                }
-            }, 1200);
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
 
             input.value = '';
         }
 
-        function receiveIncomingMessage(msg) {
-            saveMessageToStorage(msg);
-            if (activeChatPartner && (msg.senderId === activeChatPartner.id || msg.receiverId === activeChatPartner.id)) {
-                renderActiveChatHistory();
-            }
-            updateInboxBadgeCount();
+        function joinCustomRoom() {
+            const roomCode = document.getElementById('customRoomInput').value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+            if (!roomCode) return alert("Please enter a room code!");
+            closeModal('roomModal');
+            openLiveChat('room_' + roomCode, 'Room: #' + roomCode);
         }
 
-        // Receive BroadcastChannel messages across browser tabs
-        chatChannel.onmessage = (event) => {
-            if (event.data && event.data.type === 'NEW_CHAT_MESSAGE') {
-                const incoming = event.data.payload;
-                if (incoming.senderId !== currentUser.id) {
-                    receiveIncomingMessage(incoming);
-                }
-            }
-        };
-
-        function renderActiveChatHistory() {
-            if (!activeChatPartner) return;
-            const container = document.getElementById('chatMessages');
-            container.innerHTML = '';
-
-            const allMsgs = getStoredMessages();
-            const conversation = allMsgs.filter(m => 
-                (m.senderId === currentUser.id && m.receiverId === activeChatPartner.id) ||
-                (m.senderId === activeChatPartner.id && m.receiverId === currentUser.id)
-            );
-
-            if (conversation.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center text-slate-500 my-8 text-xs">
-                        <i class="fa-solid fa-lock text-slate-600 text-lg mb-1"></i><br>
-                        Start a secure live message thread with ${activeChatPartner.name}
-                    </div>
-                `;
-                return;
-            }
-
-            conversation.forEach(m => {
-                const isSentByMe = m.senderId === currentUser.id;
-                const msgBubble = document.createElement('div');
-                msgBubble.className = `flex flex-col ${isSentByMe ? 'items-end' : 'items-start'}`;
-
-                msgBubble.innerHTML = `
-                    <div class="max-w-[80%] px-3.5 py-2 rounded-2xl ${isSentByMe ? 'bg-blue-600 text-white rounded-br-xs' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-xs'}">
-                        <p class="text-xs leading-relaxed">${m.text}</p>
-                        <span class="text-[9px] text-slate-400 block mt-1 text-right">${m.timestamp}</span>
-                    </div>
-                `;
-                container.appendChild(msgBubble);
-            });
-
-            container.scrollTop = container.scrollHeight;
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
 
-        // Inbox Modal Engine
-        function openInboxModal() {
-            renderInboxThreads();
-            openModal('inboxModal');
-        }
+        // Modal Helpers
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
 
-        function renderInboxThreads() {
-            const threadList = document.getElementById('inboxThreadList');
-            threadList.innerHTML = '';
+        // Initialize Map
+        function initMap() {
+            map = L.map('map', { zoomControl: false }).setView([40.7128, -74.0060], 12);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+            markersGroup = L.layerGroup().addTo(map);
 
-            const allMsgs = getStoredMessages();
-            if (allMsgs.length === 0) {
-                threadList.innerHTML = `
-                    <div class="text-center p-8 text-slate-500 text-xs">
-                        <i class="fa-solid fa-comments text-2xl mb-2 text-slate-700"></i>
-                        <p>No chat history yet. Connect with a helper to start messaging!</p>
-                    </div>
-                `;
-                return;
-            }
-
-            // Group threads by conversation partner
-            const threads = {};
-            allMsgs.forEach(m => {
-                const partnerId = m.senderId === currentUser.id ? m.receiverId : m.senderId;
-                const partnerName = m.senderId === currentUser.id ? m.receiverName : m.senderName;
-                
-                if (!threads[partnerId] || new Date(m.timestamp) > new Date(threads[partnerId].timestamp)) {
-                    threads[partnerId] = {
-                        partnerId: partnerId,
-                        partnerName: partnerName,
-                        lastText: m.text,
-                        timestamp: m.timestamp,
-                        read: m.read || m.senderId === currentUser.id
-                    };
-                }
-            });
-
-            Object.values(threads).forEach(t => {
-                const partnerObj = pros.find(p => String(p.id) === String(t.partnerId)) || {
-                    img: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-                    category: 'Client / User'
-                };
-
-                const threadItem = document.createElement('div');
-                threadItem.className = 'glass-card p-3 rounded-2xl flex items-center justify-between cursor-pointer hover:border-blue-500/50 transition';
-                threadItem.onclick = () => {
-                    closeModal('inboxModal');
-                    openChatWithPro(t.partnerId);
-                };
-
-                threadItem.innerHTML = `
-                    <div class="flex items-center space-x-3">
-                        <img src="${partnerObj.img}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">
-                        <div>
-                            <h4 class="text-xs font-bold text-white">${t.partnerName}</h4>
-                            <p class="text-[11px] text-slate-400 line-clamp-1">${t.lastText}</p>
-                        </div>
-                    </div>
-                    <span class="text-[9px] text-slate-500 font-semibold">${t.timestamp}</span>
-                `;
-                threadList.appendChild(threadItem);
+            map.on('click', (e) => {
+                document.getElementById('postLat').value = e.latlng.lat.toFixed(4);
+                document.getElementById('postLng').value = e.latlng.lng.toFixed(4);
+                openModal('postModal');
             });
         }
 
-        function updateInboxBadgeCount() {
-            const allMsgs = getStoredMessages();
-            const unread = allMsgs.filter(m => m.receiverId === currentUser.id && !m.read).length;
-            const badge = document.getElementById('inboxCountBadge');
-            
-            if (unread > 0) {
-                badge.innerText = unread;
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
-        }
-
-        function markMessagesAsRead(partnerId) {
-            const msgs = getStoredMessages();
-            msgs.forEach(m => {
-                if (m.senderId === partnerId && m.receiverId === currentUser.id) {
-                    m.read = true;
-                }
-            });
-            localStorage.setItem('myhelper_chat_messages', JSON.stringify(msgs));
-            updateInboxBadgeCount();
-        }
-
-        // Account Registration Handler (Saves Backup .TXT File)
-        function handleRegistration(event) {
-            event.preventDefault();
-
-            const name = document.getElementById('regName').value.trim();
-            const pass = document.getElementById('regPassword').value.trim();
-            const jobsInput = document.getElementById('regJobs').value.trim();
-            const category = document.getElementById('regCategory').value;
-            const rate = document.getElementById('regRate').value;
-            const phone = document.getElementById('regPhone').value.trim();
-            const img = document.getElementById('regImg').value.trim();
-            const bio = document.getElementById('regBio').value.trim();
-
-            const jobsArray = jobsInput.split(',').map(j => j.trim()).filter(j => j.length > 0);
-
-            const newHelper = {
-                id: 'helper_' + Date.now(),
-                name: name,
-                password: pass,
-                category: category,
-                rate: rate,
-                phone: phone,
-                img: img,
-                bio: bio,
-                lat: defaultCenter[0] + (Math.random() - 0.5) * 0.08,
-                lng: defaultCenter[1] + (Math.random() - 0.5) * 0.08,
-                isPro: false,
-                jobs: jobsArray
-            };
-
-            pros.unshift(newHelper);
-            localStorage.setItem('myhelper_map_pros', JSON.stringify(pros));
-
-            // Generate Backup .txt file for client download
-            const backupContent = `====================================
-MYHELPER ACCOUNT CREDENTIALS & BACKUP
-====================================
-Account Name: ${name}
-Password: ${pass}
-Category: ${category}
-Hourly Rate: $${rate}/hr
-Phone: ${phone}
-Registered Jobs: ${jobsArray.join(', ')}
-Date Created: ${new Date().toLocaleString()}
-====================================`;
-
-            const blob = new Blob([backupContent], { type: 'text/plain' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `${name.replace(/\s+/g, '_')}_MyHelper_Backup.txt`;
-            link.click();
-
-            // Set as Logged In User
-            currentUser = { id: newHelper.id, name: newHelper.name };
-            localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
-
-            updateUserStatusUI();
-            closeModal('proModal');
-            renderProsGrid(pros);
-            updateMapMarkers(pros);
-
-            alert(`Registration successful! Account backup saved to your downloads.`);
-        }
-
-        // Account Login Handler
-        function handleLogin(event) {
-            event.preventDefault();
-            const userIn = document.getElementById('loginUser').value.trim();
-            const passIn = document.getElementById('loginPass').value.trim();
-
-            const matched = pros.find(p => 
-                p.name.toLowerCase() === userIn.toLowerCase() && p.password === passIn
-            );
-
-            if (matched) {
-                currentUser = { id: matched.id, name: matched.name };
-                localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
-                updateUserStatusUI();
-                closeModal('loginModal');
-                initPeerEngine();
-                alert(`Welcome back, ${matched.name}! Logged in successfully.`);
-            } else {
-                alert("Invalid username or password. Try the Owner credentials!");
-            }
-        }
-
-        function logout() {
-            currentUser = { name: 'Client Guest', id: 'guest_' + Math.random().toString(36).substr(2, 6) };
-            localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
-            updateUserStatusUI();
-        }
-
-        function updateUserStatusUI() {
-            const userBox = document.getElementById('userStatusBox');
-            const loginBtn = document.getElementById('loginBtn');
-            const nameSpan = document.getElementById('loggedInName');
-
-            if (currentUser && currentUser.name !== 'Client Guest') {
-                nameSpan.innerText = currentUser.name;
-                userBox.classList.remove('hidden');
-                userBox.classList.add('flex');
-                loginBtn.classList.add('hidden');
-            } else {
-                userBox.classList.add('hidden');
-                userBox.classList.remove('flex');
-                loginBtn.classList.remove('hidden');
-            }
-        }
-
-        // Pro Upgrade Subscription Handler ($1/month)
-        function processProSubscription() {
-            if (!currentUser || currentUser.name === 'Client Guest') {
-                alert("Please log in or register a helper account first!");
-                closeModal('subscriptionModal');
-                openModal('loginModal');
-                return;
-            }
-
-            const targetPro = pros.find(p => String(p.id) === String(currentUser.id) || p.name.toLowerCase() === currentUser.name.toLowerCase());
-            if (targetPro) {
-                targetPro.isPro = true;
-                localStorage.setItem('myhelper_map_pros', JSON.stringify(pros));
-                renderProsGrid(pros);
-                updateMapMarkers(pros);
-                closeModal('subscriptionModal');
-                alert("🎉 Congratulations! Your $1/mo PRO Membership is now ACTIVE.");
-            } else {
-                alert("Please register a helper profile first to activate PRO status.");
-            }
-        }
-
-        // Initial App Launch
-        window.addEventListener('DOMContentLoaded', () => {
+        window.onload = () => {
+            loadAccountProfile();
             initMap();
-            renderProsGrid(pros);
-            updateUserStatusUI();
-            updateInboxBadgeCount();
-            initPeerEngine();
-        });
+            listenToListings();
+        };
     </script>
 </body>
 </html>

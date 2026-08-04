@@ -15,6 +15,10 @@
     <!-- Leaflet.js CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Firebase JS SDK (Compat Mode for single HTML setup) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
     <script>
         tailwind.config = {
@@ -114,13 +118,20 @@
                 </div>
                 <div class="flex flex-col">
                     <span class="text-2xl font-extrabold tracking-tight text-white leading-none">My<span class="text-blue-500">Helper</span></span>
-                    <span class="text-[10px] font-semibold text-amber-400 tracking-widest uppercase mt-1">PRO Network & Live Map</span>
+                    <span class="text-[10px] font-semibold text-amber-400 tracking-widest uppercase mt-1">PRO Network & Live Messaging</span>
                 </div>
             </div>
 
             <!-- Action Buttons -->
             <div class="flex items-center space-x-2 sm:space-x-3">
                 
+                <!-- INBOX BUTTON WITH LIVE BADGE -->
+                <button onclick="openInboxModal()" class="relative bg-slate-900 border border-slate-800 hover:border-blue-500/50 text-xs font-semibold text-slate-200 px-3.5 py-2.5 rounded-xl transition flex items-center space-x-2">
+                    <i class="fa-solid fa-inbox text-blue-400"></i>
+                    <span class="hidden sm:inline">Inbox</span>
+                    <span id="inboxCountBadge" class="hidden bg-rose-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">0</span>
+                </button>
+
                 <!-- Account Status / Logged In Indicator -->
                 <div id="userStatusBox" class="hidden items-center space-x-2 bg-slate-900 border border-amber-500/30 px-3 py-1.5 rounded-xl">
                     <i class="fa-solid fa-user-shield text-amber-400 text-xs"></i>
@@ -151,11 +162,11 @@
             
             <div class="inline-flex items-center space-x-2 bg-amber-500/10 border border-amber-500/20 px-3.5 py-1.5 rounded-full text-amber-400 text-xs font-semibold mb-4 backdrop-blur-md">
                 <i class="fa-solid fa-crown text-amber-400 text-xs"></i>
-                <span>PRO Membership Active — $1/Month Subscription Available</span>
+                <span>PRO Membership Active — Live Real-Time Chat & Inbox Enabled</span>
             </div>
 
             <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-4 tracking-tight leading-tight">
-                Hire Verified Local Helpers & <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-blue-400 to-indigo-400">PRO Specialist Jobs</span>
+                Hire Verified Local Helpers & <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-blue-400 to-indigo-400">Chat In Real-Time</span>
             </h1>
 
             <!-- Search Panel -->
@@ -189,7 +200,7 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <h2 id="sectionTitle" class="text-xl font-extrabold text-white tracking-tight">Active Helper Directory</h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Click "Chat" to message or view their offered jobs</p>
+                        <p class="text-xs text-slate-400 mt-0.5">Click "Chat" to message in real-time or check your Inbox</p>
                     </div>
                     <span id="activeCount" class="text-xs font-semibold bg-slate-900 text-blue-400 px-3 py-1.5 rounded-lg border border-slate-800">0 Active</span>
                 </div>
@@ -217,6 +228,38 @@
 
         </div>
     </main>
+
+    <!-- INBOX MODAL / DRAWER -->
+    <div id="inboxModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
+        <div class="glass-panel border border-slate-800 rounded-3xl max-w-lg w-full h-[550px] flex flex-col relative shadow-2xl my-auto overflow-hidden">
+            
+            <!-- Inbox Header -->
+            <div class="p-4 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center">
+                        <i class="fa-solid fa-inbox text-base"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-white leading-none">Messages & Inbox</h3>
+                        <span id="inboxSubtext" class="text-[10px] text-slate-400">Your active real-time conversations</span>
+                    </div>
+                </div>
+                <button onclick="closeModal('inboxModal')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Inbox Thread List -->
+            <div id="inboxThreadList" class="flex-grow p-4 space-y-2 overflow-y-auto chat-scroll">
+                <!-- Thread Items Render Dynamically -->
+            </div>
+
+            <!-- Inbox Footer -->
+            <div class="p-3 bg-slate-900/90 border-t border-slate-800 text-center">
+                <p class="text-[11px] text-slate-400"><i class="fa-solid fa-bolt text-amber-400 mr-1"></i> Messages update live across windows & devices.</p>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL 1: REGISTER PRO MODAL -->
     <div id="proModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
@@ -301,13 +344,11 @@
             <h3 class="text-2xl font-black text-white mt-2">Pay to be a PRO</h3>
             <p class="text-xs text-slate-400 mt-1">Get top dispatch priority, gold badge, and list unlimited custom jobs.</p>
 
-            <!-- Price Tag -->
             <div class="my-6 p-4 rounded-2xl bg-slate-900 border border-slate-800">
                 <div class="text-3xl font-black text-white">$1 <span class="text-xs font-semibold text-slate-400">/ month</span></div>
                 <p class="text-[11px] text-emerald-400 font-semibold mt-1"><i class="fa-solid fa-check mr-1"></i> Cancel anytime. Instant activation.</p>
             </div>
 
-            <!-- Features -->
             <ul class="text-left space-y-2 text-xs text-slate-300 mb-6 bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
                 <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-400 mr-2"></i> Verified Gold PRO Badge on Map & Profile</li>
                 <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-400 mr-2"></i> Rank top on client search results</li>
@@ -384,7 +425,7 @@
 
             <!-- Chat Input Box -->
             <form onsubmit="sendChatMessage(event)" class="p-3 bg-slate-900/90 border-t border-slate-800 flex items-center space-x-2">
-                <input type="text" id="chatInput" placeholder="Type a message to this helper..." required class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-slate-100 text-xs focus:outline-none focus:border-blue-500 transition">
+                <input type="text" id="chatInput" placeholder="Type a live message..." required class="flex-grow bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-slate-100 text-xs focus:outline-none focus:border-blue-500 transition">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white w-9 h-9 rounded-xl flex items-center justify-center transition shadow-lg shadow-blue-600/30">
                     <i class="fa-solid fa-paper-plane text-xs"></i>
                 </button>
@@ -393,8 +434,33 @@
         </div>
     </div>
 
-    <!-- Application Logic -->
+    <!-- Application Logic & Real-time Chat Engine -->
     <script>
+        // FIREBASE CONFIGURATION (REPLACE WITH YOUR FREE FIREBASE PROJECT KEYS FOR GLOBAL CROSS-DEVICE CHAT)
+        const firebaseConfig = {
+            apiKey: "OPTIONAL_FIREBASE_API_KEY",
+            authDomain: "myhelper-app.firebaseapp.com",
+            databaseURL: "https://myhelper-app-default-rtdb.firebaseio.com",
+            projectId: "myhelper-app",
+            storageBucket: "myhelper-app.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef123456"
+        };
+
+        let useFirebase = false;
+        try {
+            if (firebaseConfig.apiKey !== "OPTIONAL_FIREBASE_API_KEY") {
+                firebase.initializeApp(firebaseConfig);
+                useFirebase = true;
+                console.log("Connected to Firebase Cloud Database!");
+            }
+        } catch (e) {
+            useFirebase = false;
+        }
+
+        // BroadcastChannel for instant multi-tab live chat without Firebase keys
+        const chatChannel = new BroadcastChannel('myhelper_live_chat_channel');
+
         const defaultCenter = [40.7128, -74.0060];
         
         // DEFAULT DEMO OWNER ACCOUNT WITH MANY JOBS
@@ -422,16 +488,17 @@
 
         let pros = JSON.parse(localStorage.getItem('myhelper_map_pros')) || [];
         
-        // Ensure Owner Account is always present in storage
+        // Ensure Owner Account is always present
         if (!pros.some(p => p.name.toLowerCase() === 'the owner')) {
             pros.unshift(ownerDemoAccount);
             localStorage.setItem('myhelper_map_pros', JSON.stringify(pros));
         }
 
-        let currentUser = JSON.parse(localStorage.getItem('myhelper_current_user')) || null;
-        let activeChatProId = null;
+        let currentUser = JSON.parse(localStorage.getItem('myhelper_current_user')) || { name: 'Client Guest', id: 'guest_user' };
+        let activeChatPartner = null;
         let map, markersGroup;
 
+        // Initialize Map
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView(defaultCenter, 12);
             L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -467,7 +534,7 @@
                         <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover mx-auto mb-2 border border-slate-700">
                         <h4 class="font-bold text-sm text-white">${p.name} ${p.isPro ? '👑' : ''}</h4>
                         <p class="text-[10px] text-amber-400 font-bold uppercase mb-2">${p.category} — $${p.rate}/hr</p>
-                        <button onclick="openChatModal(${p.id})" class="inline-block bg-blue-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg">Chat Live</button>
+                        <button onclick="openChatModal('${p.name}')" class="inline-block bg-blue-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg">Chat Live</button>
                     </div>
                 `);
 
@@ -518,7 +585,6 @@
                             
                             <p class="text-slate-300 text-xs leading-relaxed mb-3 line-clamp-2">${p.bio}</p>
 
-                            <!-- JOBS DONE SECTION -->
                             <div class="mb-4">
                                 <span class="text-[9px] font-bold uppercase text-slate-400 block mb-1">Jobs Offered:</span>
                                 <div class="flex flex-wrap gap-1 max-h-16 overflow-y-auto">
@@ -540,7 +606,7 @@
                                 <button onclick="downloadAccountTxt(${p.id})" title="Download Account TXT" class="bg-slate-900 hover:bg-slate-800 text-emerald-400 text-[11px] font-semibold px-2 py-2 rounded-xl border border-slate-800 transition">
                                     <i class="fa-solid fa-file-lines"></i>
                                 </button>
-                                <button onclick="openChatModal(${p.id})" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold px-3 py-2 rounded-xl transition flex items-center space-x-1">
+                                <button onclick="openChatModal('${p.name}')" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold px-3 py-2 rounded-xl transition flex items-center space-x-1">
                                     <i class="fa-solid fa-comments text-[10px]"></i>
                                     <span>Chat</span>
                                 </button>
@@ -551,6 +617,192 @@
             });
 
             updateMapMarkers(dataList);
+        }
+
+        // REAL-TIME MESSAGING ENGINE & INBOX MANAGEMENT
+        function getRoomId(userA, userB) {
+            return [userA.toLowerCase().trim(), userB.toLowerCase().trim()].sort().join('_vs_');
+        }
+
+        function openChatModal(partnerName) {
+            const partner = pros.find(p => p.name.toLowerCase() === partnerName.toLowerCase()) || {
+                name: partnerName,
+                category: 'Client / Helper',
+                img: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
+            };
+
+            activeChatPartner = partner;
+            document.getElementById('chatName').innerText = partner.name;
+            document.getElementById('chatCategory').innerText = partner.category || 'User';
+            document.getElementById('chatAvatar').src = partner.img;
+
+            renderChatMessages();
+            document.getElementById('chatModal').classList.remove('hidden');
+            document.getElementById('chatModal').classList.add('flex');
+            
+            closeModal('inboxModal');
+        }
+
+        function renderChatMessages() {
+            if (!activeChatPartner) return;
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.innerHTML = '';
+
+            const roomId = getRoomId(currentUser.name, activeChatPartner.name);
+            const allStore = JSON.parse(localStorage.getItem('myhelper_realtime_chats')) || {};
+            const roomMessages = allStore[roomId] || [];
+
+            if (roomMessages.length === 0) {
+                messagesContainer.innerHTML = `
+                    <div class="text-center py-8 text-slate-500 text-xs">
+                        <i class="fa-regular fa-paper-plane text-2xl mb-2 text-slate-600 block"></i>
+                        No messages yet. Send a message to start chatting in real-time!
+                    </div>
+                `;
+            } else {
+                roomMessages.forEach(msg => {
+                    const isMe = msg.sender.toLowerCase() === currentUser.name.toLowerCase();
+                    const timeStr = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                    messagesContainer.innerHTML += `
+                        <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
+                            <div class="${isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'} max-w-[80%] p-3 rounded-2xl shadow-sm">
+                                <div class="text-[9px] opacity-75 font-semibold mb-1 flex justify-between items-center space-x-2">
+                                    <span>${isMe ? 'You' : msg.sender}</span>
+                                    <span>${timeStr}</span>
+                                </div>
+                                <p class="text-xs leading-relaxed">${msg.text}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function sendChatMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text || !activeChatPartner) return;
+
+            const roomId = getRoomId(currentUser.name, activeChatPartner.name);
+            const msgObj = {
+                sender: currentUser.name,
+                recipient: activeChatPartner.name,
+                text: text,
+                timestamp: Date.now()
+            };
+
+            // Save locally
+            const allStore = JSON.parse(localStorage.getItem('myhelper_realtime_chats')) || {};
+            if (!allStore[roomId]) allStore[roomId] = [];
+            allStore[roomId].push(msgObj);
+            localStorage.setItem('myhelper_realtime_chats', JSON.stringify(allStore));
+
+            // Sync via BroadcastChannel to other windows/tabs instantly
+            chatChannel.postMessage({ type: 'NEW_MESSAGE', room: roomId, msg: msgObj });
+
+            // Sync via Firebase if configured
+            if (useFirebase) {
+                firebase.database().ref(`chats/${roomId}`).push(msgObj);
+            }
+
+            input.value = '';
+            renderChatMessages();
+            updateInboxUI();
+        }
+
+        // Listen for incoming live messages from other tabs/windows
+        chatChannel.onmessage = (event) => {
+            if (event.data && event.data.type === 'NEW_MESSAGE') {
+                const { room, msg } = event.data;
+                
+                // Save locally in receiving window
+                const allStore = JSON.parse(localStorage.getItem('myhelper_realtime_chats')) || {};
+                if (!allStore[room]) allStore[room] = [];
+                
+                // Avoid duplicating if already present
+                if (!allStore[room].some(m => m.timestamp === msg.timestamp && m.sender === msg.sender)) {
+                    allStore[room].push(msg);
+                    localStorage.setItem('myhelper_realtime_chats', JSON.stringify(allStore));
+                }
+
+                // If chat modal is currently open with this sender, update view instantly
+                if (activeChatPartner && getRoomId(currentUser.name, activeChatPartner.name) === room) {
+                    renderChatMessages();
+                }
+
+                updateInboxUI();
+            }
+        };
+
+        // OPEN INBOX MODAL
+        function openInboxModal() {
+            updateInboxUI();
+            document.getElementById('inboxModal').classList.remove('hidden');
+            document.getElementById('inboxModal').classList.add('flex');
+        }
+
+        function updateInboxUI() {
+            const listContainer = document.getElementById('inboxThreadList');
+            const badge = document.getElementById('inboxCountBadge');
+            listContainer.innerHTML = '';
+
+            const allStore = JSON.parse(localStorage.getItem('myhelper_realtime_chats')) || {};
+            const rooms = Object.keys(allStore);
+
+            // Filter rooms relevant to current user
+            const myRooms = rooms.filter(r => r.includes(currentUser.name.toLowerCase().trim()));
+
+            badge.innerText = myRooms.length;
+            if (myRooms.length > 0) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            if (myRooms.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-12 text-slate-500">
+                        <i class="fa-solid fa-inbox text-3xl mb-2 text-slate-600 block"></i>
+                        <p class="text-xs font-semibold">Your inbox is empty.</p>
+                        <p class="text-[10px] text-slate-500 mt-1">Start a conversation with any helper from the directory!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            myRooms.forEach(room => {
+                const messages = allStore[room];
+                const lastMsg = messages[messages.length - 1];
+                
+                // Determine partner name
+                const names = room.split('_vs_');
+                const partnerNameRaw = names.find(n => n !== currentUser.name.toLowerCase().trim()) || names[0];
+                const partnerObj = pros.find(p => p.name.toLowerCase() === partnerNameRaw) || { name: partnerNameRaw, img: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150', category: 'User' };
+
+                const timeAgo = lastMsg ? new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                listContainer.innerHTML += `
+                    <div onclick="openChatModal('${partnerObj.name}')" class="p-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-blue-500/40 cursor-pointer transition flex items-center justify-between group">
+                        <div class="flex items-center space-x-3 overflow-hidden">
+                            <img src="${partnerObj.img}" class="w-10 h-10 rounded-xl object-cover border border-slate-700 flex-shrink-0">
+                            <div class="overflow-hidden">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="text-xs font-bold text-white truncate group-hover:text-blue-400 transition">${partnerObj.name}</h4>
+                                </div>
+                                <p class="text-[11px] text-slate-400 truncate mt-0.5">${lastMsg ? `${lastMsg.sender === currentUser.name ? 'You: ' : ''}${lastMsg.text}` : 'No messages'}</p>
+                            </div>
+                        </div>
+                        <div class="text-right flex-shrink-0 ml-2">
+                            <span class="text-[9px] text-slate-500 block">${timeAgo}</span>
+                            <span class="inline-block mt-1 text-[10px] text-blue-400 font-semibold group-hover:translate-x-0.5 transition">Open <i class="fa-solid fa-chevron-right text-[8px]"></i></span>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
         // ACCOUNT DOWNLOAD AS .TXT FILE
@@ -612,7 +864,6 @@ Keep this file on your device for account records!`;
             pros.unshift(newPro);
             localStorage.setItem('myhelper_map_pros', JSON.stringify(pros));
             
-            // Set current logged in user
             currentUser = newPro;
             localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
             updateUserUI();
@@ -625,7 +876,6 @@ Keep this file on your device for account records!`;
             alert(`Account created successfully!\n\nYour backup file (myhelper_account_${newPro.name}.txt) has been downloaded.`);
         }
 
-        // LOGIN SYSTEM
         function handleLogin(e) {
             e.preventDefault();
             const userVal = document.getElementById('loginUser').value.trim();
@@ -638,16 +888,18 @@ Keep this file on your device for account records!`;
                 localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
                 updateUserUI();
                 closeModal('loginModal');
+                updateInboxUI();
                 alert(`Welcome back, ${found.name}! You are now logged in.`);
             } else {
-                alert('Invalid Username or Password. Use "the owner" and "@owerguy67" for the owner demo.');
+                alert('Invalid Username or Password. Use "the owner" and "@owerguy67" for owner demo.');
             }
         }
 
         function logout() {
-            currentUser = null;
-            localStorage.removeItem('myhelper_current_user');
+            currentUser = { name: 'Client Guest', id: 'guest_user' };
+            localStorage.setItem('myhelper_current_user', JSON.stringify(currentUser));
             updateUserUI();
+            updateInboxUI();
             alert('Logged out successfully.');
         }
 
@@ -656,7 +908,7 @@ Keep this file on your device for account records!`;
             const loginBtn = document.getElementById('loginBtn');
             const loggedInName = document.getElementById('loggedInName');
 
-            if (currentUser) {
+            if (currentUser && currentUser.name !== 'Client Guest') {
                 statusBox.classList.remove('hidden');
                 statusBox.classList.add('flex');
                 loginBtn.classList.add('hidden');
@@ -668,16 +920,14 @@ Keep this file on your device for account records!`;
             }
         }
 
-        // PRO SUBSCRIPTION LOGIC ($1 / MONTH)
         function processProSubscription() {
-            if (!currentUser) {
+            if (!currentUser || currentUser.name === 'Client Guest') {
                 alert('Please log in or register an account first before subscribing to Pro!');
                 closeModal('subscriptionModal');
                 openLoginModal();
                 return;
             }
 
-            // Upgrade current user
             const proIndex = pros.findIndex(p => p.id === currentUser.id);
             if (proIndex !== -1) {
                 pros[proIndex].isPro = true;
@@ -688,76 +938,7 @@ Keep this file on your device for account records!`;
 
             renderPros();
             closeModal('subscriptionModal');
-            alert(`🎉 Success! Your account (${currentUser.name}) is now upgraded to PRO Status for $1/month!`);
-        }
-
-        // LIVE CHAT SYSTEM
-        function openChatModal(proId) {
-            const pro = pros.find(p => p.id === proId);
-            if (!pro) return;
-
-            activeChatProId = proId;
-            document.getElementById('chatName').innerText = pro.name;
-            document.getElementById('chatCategory').innerText = pro.category;
-            document.getElementById('chatAvatar').src = pro.img;
-
-            renderChatMessages();
-            document.getElementById('chatModal').classList.remove('hidden');
-            document.getElementById('chatModal').classList.add('flex');
-        }
-
-        function renderChatMessages() {
-            const messagesContainer = document.getElementById('chatMessages');
-            messagesContainer.innerHTML = '';
-
-            const allChats = JSON.parse(localStorage.getItem('myhelper_chats')) || {};
-            const proChat = allChats[activeChatProId] || [
-                { sender: 'pro', text: `Hello! I'm active and available. How can I help you?` }
-            ];
-
-            proChat.forEach(msg => {
-                const isUser = msg.sender === 'user';
-                messagesContainer.innerHTML += `
-                    <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
-                        <div class="${isUser ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none'} max-w-[80%] p-3 rounded-2xl shadow-sm">
-                            <p>${msg.text}</p>
-                        </div>
-                    </div>
-                `;
-            });
-
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-
-        function sendChatMessage(e) {
-            e.preventDefault();
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if (!text || !activeChatProId) return;
-
-            const allChats = JSON.parse(localStorage.getItem('myhelper_chats')) || {};
-            if (!allChats[activeChatProId]) {
-                allChats[activeChatProId] = [
-                    { sender: 'pro', text: `Hello! How can I help you with my services?` }
-                ];
-            }
-
-            allChats[activeChatProId].push({ sender: 'user', text: text });
-            localStorage.setItem('myhelper_chats', JSON.stringify(allChats));
-            input.value = '';
-            renderChatMessages();
-
-            setTimeout(() => {
-                const targetPro = pros.find(p => p.id === activeChatProId);
-                allChats[activeChatProId].push({ 
-                    sender: 'pro', 
-                    text: `Thanks for reaching out! I received: "${text}". Call me at ${targetPro ? targetPro.phone : 'my listed number'} to schedule.` 
-                });
-                localStorage.setItem('myhelper_chats', JSON.stringify(allChats));
-                if (document.getElementById('chatModal').classList.contains('flex')) {
-                    renderChatMessages();
-                }
-            }, 1200);
+            alert(`🎉 Success! Your account (${currentUser.name}) is upgraded to PRO Status for $1/month!`);
         }
 
         function focusMapOnPro(lat, lng) {
@@ -820,6 +1001,7 @@ Keep this file on your device for account records!`;
             initMap();
             renderPros();
             updateUserUI();
+            updateInboxUI();
         };
     </script>
 </body>

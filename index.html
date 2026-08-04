@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyFixer — On-Demand Verified Local Pros & Live Tracking</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Leaflet.js CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            glow: '#60a5fa'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        .glass-card:hover {
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 12px 30px -10px rgba(59, 130, 246, 0.2);
+        }
+        .glow-effect {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+            pointer-events: none;
+        }
+        /* Custom Leaflet Map Styling */
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background: #0f172a !important;
+            color: #f8fafc !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem !important;
+        }
+        .leaflet-container {
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            background: #020617 !important;
+        }
+        .custom-pin {
+            display: flex;
+            align-items: center;
+            justify-center;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #2563eb;
+            color: white;
+            border: 3px solid #0f172a;
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.6);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .custom-pin:hover {
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen selection:bg-blue-500 selection:text-white relative overflow-x-hidden">
+
+    <!-- Background Glow Elements -->
+    <div class="glow-effect -top-20 -left-20"></div>
+    <div class="glow-effect top-1/3 -right-20"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="glass-panel sticky top-0 z-40 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="resetFilters()">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/25">
+                    <i class="fa-solid fa-location-dot text-white text-lg"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-2xl font-extrabold tracking-tight text-white leading-none">My<span class="text-blue-500">Fixer</span></span>
+                    <span class="text-[10px] font-semibold text-slate-400 tracking-widest uppercase mt-1">Live Map & Dispatch</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center space-x-3 sm:space-x-4">
+                <button onclick="toggleSeedData()" class="hidden sm:inline-flex items-center text-xs font-semibold text-slate-400 hover:text-slate-200 transition px-3 py-2 rounded-xl bg-slate-900 border border-slate-800">
+                    <i class="fa-solid fa-database mr-2 text-blue-400"></i> Demo Seed
+                </button>
+
+                <button onclick="openProModal()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl transition shadow-lg shadow-blue-600/25 flex items-center space-x-2 border border-blue-400/20">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Become a Pro</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero / Search Section -->
+    <header class="relative pt-8 pb-10 px-4 border-b border-slate-800/80">
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            
+            <div class="inline-flex items-center space-x-2 bg-blue-500/10 border border-blue-500/20 px-3.5 py-1.5 rounded-full text-blue-400 text-xs font-semibold mb-4 backdrop-blur-md">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+                <span>Interactive GPS Dispatch Active</span>
+            </div>
+
+            <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-4 tracking-tight leading-tight">
+                Locate & Book Nearby <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-cyan-400">Technicians Live</span>
+            </h1>
+
+            <!-- Search Panel -->
+            <div class="glass-panel p-2.5 rounded-2xl shadow-2xl max-w-2xl mx-auto flex flex-col sm:flex-row gap-2">
+                <div class="flex-grow flex items-center bg-slate-900/80 rounded-xl px-4 py-3 border border-slate-800 focus-within:border-blue-500 transition">
+                    <i class="fa-solid fa-magnifying-glass text-blue-500 mr-3 text-sm"></i>
+                    <input type="text" id="searchInput" onkeyup="filterPros()" placeholder="Filter by trade or name..." class="bg-transparent w-full text-slate-100 placeholder-slate-500 focus:outline-none text-sm font-medium">
+                </div>
+                <button onclick="filterPros()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 rounded-xl transition text-sm shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2">
+                    <span>Search</span>
+                </button>
+            </div>
+
+            <!-- Category Pills -->
+            <div class="flex flex-wrap justify-center gap-2 mt-4">
+                <button onclick="filterByCategory('All')" class="cat-pill bg-blue-600 text-white text-xs font-semibold px-3.5 py-1.5 rounded-xl transition shadow-md">All</button>
+                <button onclick="filterByCategory('Plumbing')" class="cat-pill bg-slate-900 border border-slate-800 text-slate-300 hover:border-blue-500/50 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition">🚰 Plumbing</button>
+                <button onclick="filterByCategory('Electrical')" class="cat-pill bg-slate-900 border border-slate-800 text-slate-300 hover:border-blue-500/50 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition">⚡ Electrical</button>
+                <button onclick="filterByCategory('AC Repair')" class="cat-pill bg-slate-900 border border-slate-800 text-slate-300 hover:border-blue-500/50 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition">❄️ AC Repair</button>
+                <button onclick="filterByCategory('Tech Fix')" class="cat-pill bg-slate-900 border border-slate-800 text-slate-300 hover:border-blue-500/50 text-xs font-semibold px-3.5 py-1.5 rounded-xl transition">💻 Tech Setup</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Split Screen Directory & Interactive Map -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- LEFT COLUMN: Directory Cards (7 Columns) -->
+            <div class="lg:col-span-7 space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 id="sectionTitle" class="text-xl font-extrabold text-white tracking-tight">Local Service Directory</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Click "Focus Map" to zoom in on any provider's GPS position</p>
+                    </div>
+                    <span id="activeCount" class="text-xs font-semibold bg-slate-900 text-blue-400 px-3 py-1.5 rounded-lg border border-slate-800">0 Active</span>
+                </div>
+
+                <div id="proGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Dynamic JavaScript Cards -->
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Sticky Leaflet Map (5 Columns) -->
+            <div class="lg:col-span-5 sticky top-24">
+                <div class="glass-panel p-3 rounded-3xl border border-slate-800 overflow-hidden shadow-2xl">
+                    <div class="flex justify-between items-center px-3 py-2 mb-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span class="text-xs font-bold text-white uppercase tracking-wider">Live Coverage Map</span>
+                        </div>
+                        <button onclick="resetMapView()" class="text-[10px] text-blue-400 hover:underline">Reset View</button>
+                    </div>
+                    
+                    <!-- Leaflet Container -->
+                    <div id="map" class="h-[420px] lg:h-[520px] w-full rounded-2xl z-10"></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 1. FULL PROFILE DETAIL MODAL -->
+    <div id="profileModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
+        <div class="glass-panel border border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 relative shadow-2xl my-auto">
+            <button onclick="closeModal('profileModal')" class="absolute top-6 right-6 w-9 h-9 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="modalProfileContent"></div>
+        </div>
+    </div>
+
+    <!-- 2. REGISTER PRO MODAL -->
+    <div id="proModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 px-4 py-6 overflow-y-auto">
+        <div class="glass-panel border border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 relative shadow-2xl my-auto">
+            <button onclick="closeModal('proModal')" class="absolute top-6 right-6 w-9 h-9 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="mb-6">
+                <span class="bg-blue-500/10 text-blue-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-blue-500/20">Pro Registration</span>
+                <h3 class="text-2xl font-extrabold text-white mt-2">Join MyFixer Live Map</h3>
+                <p class="text-xs text-slate-400 mt-1">Publish your profile and broadcast your service area.</p>
+            </div>
+
+            <form onsubmit="handleRegistration(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Full Name / Business Title</label>
+                    <input type="text" id="regName" required placeholder="e.g. Alex Miller Plumbing" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">Trade Category</label>
+                        <select id="regCategory" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                            <option value="Plumbing">Plumbing</option>
+                            <option value="Electrical">Electrical</option>
+                            <option value="AC Repair">AC Repair</option>
+                            <option value="Tech Fix">Tech Setup</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-300 mb-1">Hourly Rate ($ USD)</label>
+                        <input type="number" id="regRate" required placeholder="65" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Phone Number (For Client Calls)</label>
+                    <input type="tel" id="regPhone" required placeholder="+1 (555) 019-2834" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Profile Avatar Link (URL)</label>
+                    <input type="url" id="regImg" required placeholder="https://images.unsplash.com/..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-300 mb-1">Services & License Info</label>
+                    <textarea id="regBio" rows="3" required placeholder="Describe your services and experience..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-blue-500 transition resize-none"></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 rounded-xl transition text-sm shadow-lg shadow-blue-600/30">
+                    Publish My Profile & Location
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // Default Seed Data with GPS Coordinates
+        const defaultCenter = [40.7128, -74.0060]; // New York Metro Area
+        
+        const seedData = [
+            {
+                id: 101,
+                name: "Marcus Vance",
+                category: "Plumbing",
+                rate: 65,
+                phone: "+1 (555) 234-8901",
+                img: "https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=300",
+                bio: "Master plumber with 12+ years experience. Emergency burst pipes, water heaters, and drain unclogging.",
+                rating: "4.9",
+                lat: 40.7282,
+                lng: -73.9942,
+                icon: "fa-faucet-drip"
+            },
+            {
+                id: 102,
+                name: "Elena Rostova",
+                category: "Electrical",
+                rate: 80,
+                phone: "+1 (555) 891-2345",
+                img: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300",
+                bio: "Certified residential electrician. Panel breaker upgrades, lighting, smart homes, and inspections.",
+                rating: "5.0",
+                lat: 40.7051,
+                lng: -74.0120,
+                icon: "fa-bolt"
+            },
+            {
+                id: 103,
+                name: "Carlos Mendez",
+                category: "AC Repair",
+                rate: 75,
+                phone: "+1 (555) 456-7890",
+                img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300",
+                bio: "HVAC specialist for central air conditioning, heat pumps, and duct repairs. Rapid 30-min response.",
+                rating: "4.8",
+                lat: 40.7418,
+                lng: -73.9893,
+                icon: "fa-snowflake"
+            }
+        ];
+
+        let pros = JSON.parse(localStorage.getItem('myfixer_map_pros')) || [...seedData];
+        let map, markersGroup;
+
+        // Initialize Leaflet Map with Dark Theme
+        function initMap() {
+            map = L.map('map', { zoomControl: false }).setView(defaultCenter, 12);
+            
+            // Add zoom control at bottom right
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            // Dark Matter CartoDB Tiles
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(map);
+
+            markersGroup = L.layerGroup().addTo(map);
+            updateMapMarkers(pros);
+        }
+
+        // Update Markers on Map
+        function updateMapMarkers(dataList) {
+            if (!markersGroup) return;
+            markersGroup.clearLayers();
+
+            dataList.forEach(p => {
+                const iconClass = p.icon || 'fa-wrench';
+                const customIcon = L.divIcon({
+                    className: 'custom-pin-wrapper',
+                    html: `<div class="custom-pin"><i class="fa-solid ${iconClass} text-xs"></i></div>`,
+                    iconSize: [38, 38],
+                    iconAnchor: [19, 19]
+                });
+
+                const marker = L.marker([p.lat, p.lng], { icon: customIcon });
+                marker.bindPopup(`
+                    <div class="p-1 text-center font-sans">
+                        <img src="${p.img}" class="w-12 h-12 rounded-xl object-cover mx-auto mb-2 border border-slate-700">
+                        <h4 class="font-bold text-sm text-white">${p.name}</h4>
+                        <p class="text-[10px] text-blue-400 font-bold uppercase mb-2">${p.category} — $${p.rate}/hr</p>
+                        <a href="tel:${p.phone}" class="inline-block bg-blue-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg">Call ${p.phone}</a>
+                    </div>
+                `);
+
+                markersGroup.addLayer(marker);
+            });
+        }
+
+        function renderPros(dataList = pros) {
+            const grid = document.getElementById('proGrid');
+            const countLabel = document.getElementById('activeCount');
+            grid.innerHTML = '';
+            countLabel.innerText = `${dataList.length} Active`;
+
+            if (dataList.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 px-4 glass-card rounded-3xl border border-dashed border-slate-800">
+                        <i class="fa-solid fa-map-location-dot text-3xl text-slate-500 mb-3"></i>
+                        <h3 class="text-base font-bold text-white mb-1">No Pros Found</h3>
+                        <p class="text-xs text-slate-400 mb-4">No providers match your filter criteria.</p>
+                        <button onclick="resetFilters()" class="bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-xl">Reset Search</button>
+                    </div>
+                `;
+                updateMapMarkers([]);
+                return;
+            }
+
+            dataList.forEach(p => {
+                grid.innerHTML += `
+                    <div class="glass-card rounded-2xl p-5 flex flex-col justify-between transition-all duration-300">
+                        <div>
+                            <div class="flex items-center space-x-3 mb-3">
+                                <img src="${p.img}" class="w-11 h-11 rounded-xl object-cover border border-slate-700" onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'">
+                                <div class="overflow-hidden">
+                                    <span class="bg-blue-500/10 text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase border border-blue-500/20">${p.category}</span>
+                                    <h3 class="text-sm font-bold text-white mt-0.5 truncate">${p.name}</h3>
+                                </div>
+                            </div>
+                            <p class="text-slate-300 text-xs leading-relaxed mb-4 line-clamp-2">${p.bio}</p>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                            <div>
+                                <span class="text-[9px] text-slate-500 uppercase font-semibold">Hourly</span>
+                                <div class="text-xs font-black text-white">$${p.rate}/hr</div>
+                            </div>
+                            
+                            <div class="flex space-x-1.5">
+                                <button onclick="focusMapOnPro(${p.lat}, ${p.lng})" class="bg-slate-900 hover:bg-slate-800 text-blue-400 text-[11px] font-semibold px-2.5 py-2 rounded-xl border border-slate-800 transition flex items-center space-x-1">
+                                    <i class="fa-solid fa-crosshairs text-[10px]"></i>
+                                    <span>Focus</span>
+                                </button>
+                                <a href="tel:${p.phone}" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold px-3 py-2 rounded-xl transition flex items-center space-x-1">
+                                    <i class="fa-solid fa-phone text-[9px]"></i>
+                                    <span>Call</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            updateMapMarkers(dataList);
+        }
+
+        function focusMapOnPro(lat, lng) {
+            if (!map) return;
+            map.flyTo([lat, lng], 15, { duration: 1.5 });
+        }
+
+        function resetMapView() {
+            if (!map) return;
+            map.flyTo(defaultCenter, 12);
+        }
+
+        function handleRegistration(e) {
+            e.preventDefault();
+            // Random offset near default center to simulate real GPS drop
+            const randomLat = defaultCenter[0] + (Math.random() - 0.5) * 0.08;
+            const randomLng = defaultCenter[1] + (Math.random() - 0.5) * 0.08;
+
+            const newPro = {
+                id: Date.now(),
+                name: document.getElementById('regName').value,
+                category: document.getElementById('regCategory').value,
+                rate: document.getElementById('regRate').value,
+                phone: document.getElementById('regPhone').value,
+                img: document.getElementById('regImg').value,
+                bio: document.getElementById('regBio').value,
+                rating: "5.0",
+                lat: randomLat,
+                lng: randomLng,
+                icon: "fa-location-dot"
+            };
+
+            pros.unshift(newPro);
+            localStorage.setItem('myfixer_map_pros', JSON.stringify(pros));
+            renderPros();
+            focusMapOnPro(randomLat, randomLng);
+            closeModal('proModal');
+        }
+
+        function filterPros() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = pros.filter(p => p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query) || p.bio.toLowerCase().includes(query));
+            renderPros(filtered);
+        }
+
+        function filterByCategory(cat) {
+            if (cat === 'All') {
+                renderPros(pros);
+            } else {
+                renderPros(pros.filter(p => p.category === cat));
+            }
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            renderPros(pros);
+            resetMapView();
+        }
+
+        function toggleSeedData() {
+            pros = (pros.length === seedData.length) ? [] : [...seedData];
+            localStorage.setItem('myfixer_map_pros', JSON.stringify(pros));
+            renderPros();
+        }
+
+        function openProModal() {
+            document.getElementById('proModal').classList.remove('hidden');
+            document.getElementById('proModal').classList.add('flex');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('flex');
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // Initialize Map & Render
+        window.onload = () => {
+            initMap();
+            renderPros();
+        };
+    </script>
+</body>
+</html>

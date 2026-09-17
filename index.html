@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chandrasiri Sir's Ultimate Classroom Chaos Simulator & Tribute</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@400;600;800;900&family=Bungee&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        comic: ['"Fredoka One"', 'cursive', 'sans-serif'],
+                        bungee: ['"Bungee"', 'cursive', 'sans-serif'],
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['"Outfit"', 'sans-serif'],
+                    },
+                    colors: {
+                        lyceumGold: '#f59e0b',
+                        lyceumBlue: '#0284c7',
+                        boardGreen: '#064e3b',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @keyframes headWagGentle {
+            0% { transform: rotate(-8deg) translateY(0px); }
+            50% { transform: rotate(8deg) translateY(-2px); }
+            100% { transform: rotate(-8deg) translateY(0px); }
+        }
+
+        @keyframes headWagMedium {
+            0% { transform: rotate(-16deg) scale(1.02); }
+            25% { transform: rotate(0deg) scale(0.98); }
+            50% { transform: rotate(16deg) scale(1.02); }
+            75% { transform: rotate(0deg) scale(0.98); }
+            100% { transform: rotate(-16deg) scale(1.02); }
+        }
+
+        @keyframes headWagHyper {
+            0% { transform: rotate(-32deg) scale(1.1); }
+            25% { transform: rotate(32deg) scale(0.9); }
+            50% { transform: rotate(-32deg) scale(1.15); }
+            75% { transform: rotate(32deg) scale(0.85); }
+            100% { transform: rotate(-32deg) scale(1.1); }
+        }
+
+        @keyframes rageEarthquake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            10% { transform: translate(-12px, 6px) rotate(-8deg); }
+            30% { transform: translate(12px, -6px) rotate(8deg); }
+            50% { transform: translate(-8px, -4px) rotate(-5deg); }
+            70% { transform: translate(8px, 4px) rotate(5deg); }
+            90% { transform: translate(-4px, 2px) rotate(-2deg); }
+        }
+
+        @keyframes napBreathing {
+            0%, 100% { transform: translateY(0px) rotate(-12deg) scale(0.95); }
+            50% { transform: translateY(14px) rotate(-3deg) scale(0.92); }
+        }
+
+        .head-wag-gentle { animation: headWagGentle var(--wag-speed, 1.1s) ease-in-out infinite; transform-origin: bottom center; }
+        .head-wag-medium { animation: headWagMedium var(--wag-speed, 0.55s) linear infinite; transform-origin: bottom center; }
+        .head-wag-hyper { animation: headWagHyper 0.08s linear infinite; transform-origin: bottom center; }
+        .head-nap { animation: napBreathing 3.2s ease-in-out infinite; transform-origin: bottom center; }
+        .rage-shake { animation: rageEarthquake 0.09s linear infinite; }
+
+        .clean-avatar-frame {
+            border-radius: 9999px;
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.9), 0 0 25px 3px rgba(2, 132, 199, 0.4);
+            border: none !important;
+            outline: none !important;
+        }
+
+        .glow-fire { box-shadow: 0 0 55px rgba(239, 68, 68, 0.95), inset 0 0 25px rgba(245, 158, 11, 0.8) !important; }
+        .glow-ice { box-shadow: 0 0 45px rgba(56, 189, 248, 0.9), inset 0 0 20px rgba(14, 165, 233, 0.6) !important; }
+        .glow-rage { box-shadow: 0 0 65px rgba(220, 38, 38, 1), inset 0 0 35px rgba(185, 28, 28, 0.9) !important; }
+        .glow-sleep { box-shadow: 0 0 35px rgba(168, 85, 247, 0.6) !important; }
+
+        .whiteboard-bg {
+            background-color: #064e3b;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 0);
+            background-size: 18px 18px;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #0284c7; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-950 text-white font-sans min-h-screen flex flex-col justify-between overflow-x-hidden relative selection:bg-sky-500 selection:text-black">
+
+    <!-- Particle Canvas Layer -->
+    <canvas id="fxCanvas" class="fixed inset-0 pointer-events-none z-10 w-full h-full"></canvas>
+
+    <!-- Navigation Header -->
+    <header class="w-full bg-slate-900/90 border-b border-slate-800 py-2 px-3 relative z-30 flex flex-col items-center backdrop-blur-md">
+        <div class="flex items-center gap-2 bg-sky-500/10 border border-sky-500/30 px-3 py-0.5 rounded-full text-sky-400 font-comic text-[11px] uppercase tracking-wider mb-1">
+            <i class="fa-solid fa-graduation-cap"></i> Lyceum Pure Mathematics Department
+        </div>
+        <h1 class="text-xl md:text-2xl font-bungee text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-amber-300 to-orange-400 drop-shadow text-center">
+            CHANDRASIRI SIR'S CLASSROOM CHAOS
+        </h1>
+
+        <!-- Compact Controls Bar -->
+        <div class="mt-1 flex flex-wrap items-center justify-center gap-2 bg-slate-950/90 px-3 py-1 rounded-xl border border-slate-800 text-xs shadow-xl z-30">
+            <label class="cursor-pointer bg-sky-600 hover:bg-sky-500 text-white px-2.5 py-0.5 rounded-lg font-comic font-bold transition flex items-center gap-1 active:scale-95 text-[11px]">
+                <i class="fa-solid fa-upload"></i> Custom Face
+                <input type="file" id="photoUploader" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+            </label>
+            <button onclick="resetPhoto()" class="bg-slate-800 hover:bg-slate-700 text-gray-300 px-2 py-0.5 rounded-lg font-comic text-[11px] transition border border-slate-700">
+                <i class="fa-solid fa-rotate-left text-sky-400"></i> Reset Face
+            </button>
+
+            <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
+                <span class="font-comic text-amber-400 text-[11px] flex items-center gap-1">
+                    <i class="fa-solid fa-mars"></i> Pitch:
+                </span>
+                <input type="range" id="voicePitchSlider" min="0.5" max="0.85" step="0.05" value="0.65" class="w-12 accent-amber-400 cursor-pointer">
+            </div>
+
+            <div class="flex items-center gap-1 border-l border-slate-800 pl-2">
+                <span class="font-comic text-sky-400 text-[11px] flex items-center gap-1">
+                    <i class="fa-solid fa-arrows-spin"></i> Wobble:
+                </span>
+                <input type="range" id="wobbleSpeedSlider" min="0.1" max="1.5" step="0.1" value="0.55" oninput="updateWobbleSpeed(this.value)" class="w-12 accent-sky-400 cursor-pointer">
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl w-full mx-auto px-2 md:px-4 py-2 flex flex-col items-center flex-1 relative z-20">
+
+        <!-- Navigation Tabs -->
+        <nav class="w-full max-w-4xl bg-slate-900/90 border border-slate-800 p-1 rounded-xl flex justify-between gap-1 shadow-xl backdrop-blur-md mb-2 flex-wrap sm:flex-nowrap">
+            <button onclick="switchMode('chaos')" id="tab-chaos" class="tab-btn flex-1 py-1.5 px-2 rounded-lg font-comic text-xs font-black transition flex items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow">
+                <i class="fa-solid fa-chalkboard-user"></i> 1. Classroom Chaos
+            </button>
+            <button onclick="switchMode('nap')" id="tab-nap" class="tab-btn flex-1 py-1.5 px-2 rounded-lg font-comic text-xs font-black transition flex items-center justify-center gap-1 bg-slate-800 text-slate-400 hover:text-purple-300">
+                <i class="fa-solid fa-bed"></i> 2. Power Nap Zone
+            </button>
+            <button onclick="switchMode('meme')" id="tab-meme" class="tab-btn flex-1 py-1.5 px-2 rounded-lg font-comic text-xs font-black transition flex items-center justify-center gap-1 bg-slate-800 text-slate-400 hover:text-red-300">
+                <i class="fa-solid fa-fire text-red-400"></i> 3. Fridge & Flame Alley
+            </button>
+            <button onclick="switchMode('tribute')" id="tab-tribute" class="tab-btn flex-1 py-1.5 px-2 rounded-lg font-comic text-xs font-black transition flex items-center justify-center gap-1 bg-slate-800 text-slate-400 hover:text-amber-300">
+                <i class="fa-solid fa-quote-left text-amber-400"></i> 4. The Quote (Tribute)
+            </button>
+        </nav>
+
+        <!-- Shared Main Avatar Stage -->
+        <div id="mainAvatarStage" class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5 shadow-xl relative overflow-hidden flex flex-col items-center backdrop-blur-md mb-2.5">
+            
+            <!-- Compact Speech Bubble -->
+            <div id="mainSpeechBubble" onclick="speakCurrentQuote()" class="relative bg-white text-slate-900 font-comic p-2 rounded-xl border-2 border-slate-900 shadow-md max-w-lg w-full text-center transition-all duration-300 hover:scale-102 z-30 mb-1 cursor-pointer">
+                <p id="mainSpeechText" class="text-xs md:text-sm font-black leading-snug text-sky-600">
+                    "Hello hello hello! Welcome to pure mathematics class! Focus on the whiteboard equations!"
+                </p>
+                <div class="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[10px] border-t-white"></div>
+            </div>
+
+            <!-- Avatar Image Frame Container -->
+            <div class="relative w-32 h-32 md:w-36 md:h-36 my-1 flex items-center justify-center">
+                
+                <div id="fridgeDropSlot" class="absolute z-40 pointer-events-none hidden text-4xl">
+                    🧊
+                </div>
+
+                <div id="mustacheOverlay" class="absolute z-30 pointer-events-none hidden text-2xl top-16">
+                    🥸
+                </div>
+
+                <div id="laserEyesOverlay" class="absolute z-30 pointer-events-none hidden text-2xl top-8 flex gap-3">
+                    ⚡⚡
+                </div>
+
+                <div id="mainAvatar" class="head-wag-medium w-28 h-28 md:w-32 md:h-32 clean-avatar-frame bg-slate-900 relative z-20 cursor-pointer flex items-center justify-center transition-all duration-300 overflow-hidden glow-ice" onclick="triggerWobbleBoing()">
+                    <div class="avatar-photo-slot w-full h-full relative"></div>
+
+                    <div id="avatarOverlay" class="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between p-1.5">
+                        <div id="eyebrowLayer" class="flex justify-around pt-0.5 text-base text-amber-300 font-black">
+                            <span class="transform -rotate-12">~</span>
+                            <span class="transform rotate-12">~</span>
+                        </div>
+                        <div id="mouthLayer" class="flex justify-center pb-0.5 text-lg">
+                            <span>🎓</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Action Trigger Bar -->
+            <div class="mt-0.5 flex flex-wrap items-center justify-center gap-2">
+                <button onclick="speakLegendaryQuote()" class="px-3 py-1 bg-gradient-to-r from-red-600 via-amber-500 to-orange-500 hover:from-red-500 text-white font-comic text-[11px] font-black rounded-xl shadow transform active:scale-95 transition flex items-center gap-1 border border-amber-300">
+                    <i class="fa-solid fa-volume-high"></i> LEGENDARY QUOTE! 🔊
+                </button>
+                <div id="modeStatusBadge" class="px-2.5 py-0.5 bg-slate-950 border border-slate-800 rounded-xl text-[10px] font-comic text-sky-400 flex items-center gap-1 shadow">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span id="modeStatusText">STATUS: MATH TEACHING MODE</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Tab 1: Classroom Chaos -->
+        <section id="section-chaos" class="mode-section w-full">
+            <div class="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-2.5 shadow-xl space-y-2">
+                
+                <!-- Whiteboard Display -->
+                <div class="whiteboard-bg rounded-xl p-2.5 border-2 border-emerald-950 shadow-inner relative min-h-[110px] flex flex-col justify-between">
+                    <div class="flex justify-between text-[10px] font-mono text-emerald-300 border-b border-emerald-800 pb-0.5">
+                        <span>LYCEUM PURE MATHS • TOPIC: <span id="mathTopicName" class="text-amber-300 font-bold">QUADRATIC EQUATIONS</span></span>
+                        <span id="teachingStateLabel" class="text-amber-300 font-bold">SIR WRITING ON BOARD...</span>
+                    </div>
+
+                    <div id="mathBoardLines" class="font-mono text-emerald-100 text-[11px] my-1 space-y-0.5">
+                        <p id="line1" class="text-amber-300">f(x) = ax² + bx + c = 0</p>
+                        <p id="line2" class="text-sky-300">x = (-b ± √(b² - 4ac)) / 2a</p>
+                        <p id="line3" class="text-emerald-200">Integration: ∫ (Butt_Heat) dt = ∞ Fridges</p>
+                    </div>
+
+                    <!-- Whiteboard Tray Status -->
+                    <div class="bg-slate-950/90 rounded-lg p-1 flex flex-wrap items-center justify-between border border-slate-700 text-[10px] font-comic gap-1">
+                        <span id="whiteboardClothStatus" class="text-emerald-300">🧽 Duster: In Tray</span>
+                        <span id="waterBottleStatus" class="text-sky-300">🧴 Flask: Dilum's Desk</span>
+                        <span id="chessGameStatus" class="text-amber-300">♟️ Chess vs Hesitha & Dyan: Turn 1</span>
+                    </div>
+                </div>
+
+                <!-- Vigilance Radar Bar -->
+                <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                    <div class="flex justify-between text-[10px] font-comic mb-0.5">
+                        <span class="text-amber-400 font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-eye"></i> SIR'S VIGILANCE RADAR:
+                        </span>
+                        <span id="vigilanceText" class="text-emerald-400 font-bold">WRITING ON BOARD (SAFE TO ACT)</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700">
+                        <div id="vigilanceBar" class="bg-emerald-500 h-full w-[20%] transition-all duration-200"></div>
+                    </div>
+                </div>
+
+                <!-- Friend Squad Classroom Bench & Actions -->
+                <div class="bg-slate-950/90 p-2 rounded-xl border border-slate-800">
+                    <p class="text-[10px] font-comic text-sky-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                        <i class="fa-solid fa-users"></i> Student Squad: <span class="text-white font-bold">Dilum, Hesitha, Dyan, Mashinsha</span>
+                    </p>
+
+                    <!-- Side Quest Actions Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                        <button onclick="questStealCloth()" class="p-1.5 bg-slate-800 hover:bg-emerald-600/30 border border-slate-700 hover:border-emerald-500 rounded-xl font-comic text-[10px] text-emerald-300 transition active:scale-95 flex flex-col items-center gap-0.5 shadow">
+                            <span class="text-base">🧽</span>
+                            <span class="font-bold">Hesitha's Duster Heist</span>
+                        </button>
+
+                        <button onclick="questStealBottle()" class="p-1.5 bg-slate-800 hover:bg-sky-600/30 border border-slate-700 hover:border-sky-500 rounded-xl font-comic text-[10px] text-sky-300 transition active:scale-95 flex flex-col items-center gap-0.5 shadow">
+                            <span class="text-base">🧴</span>
+                            <span class="font-bold">Dilum's Bottle Swap</span>
+                        </button>
+
+                        <button onclick="questPlayChess()" class="p-1.5 bg-slate-800 hover:bg-amber-600/30 border border-slate-700 hover:border-amber-500 rounded-xl font-comic text-[10px] text-amber-300 transition active:scale-95 flex flex-col items-center gap-0.5 shadow">
+                            <span class="text-base">♟️</span>
+                            <span class="font-bold">Dyan's Desk Chess</span>
+                        </button>
+
+                        <button onclick="questPaperAirplane()" class="p-1.5 bg-slate-800 hover:bg-indigo-600/30 border border-slate-700 hover:border-indigo-500 rounded-xl font-comic text-[10px] text-indigo-300 transition active:scale-95 flex flex-col items-center gap-0.5 shadow">
+                            <span class="text-base">✈️</span>
+                            <span class="font-bold">Mashinsha's Plane</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Tab 2: Power Nap Zone -->
+        <section id="section-nap" class="mode-section hidden w-full">
+            <div class="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-3 shadow-xl text-center space-y-2">
+                <p class="font-comic text-xs uppercase tracking-wider text-purple-400">
+                    <i class="fa-solid fa-bed"></i> Chandrasiri's Secret Power Nap Zone
+                </p>
+
+                <!-- Disturbance Noise Meter -->
+                <div class="w-full max-w-md mx-auto bg-slate-950 p-2 rounded-xl border border-slate-800">
+                    <div class="flex justify-between text-[11px] font-comic mb-1">
+                        <span class="text-purple-400 font-bold">NOISE METER:</span>
+                        <span id="noiseVal" class="text-amber-400 font-bold">0% (QUIET)</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700">
+                        <div id="noiseBar" class="bg-purple-500 h-full w-[0%] transition-all duration-200"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-xl mx-auto">
+                    <button onclick="napPrank('tiptoe')" class="p-2 bg-purple-950/80 hover:bg-purple-900 border border-purple-500/50 rounded-xl font-comic text-xs text-purple-200 transition active:scale-95 flex flex-col items-center gap-1 shadow">
+                        <span class="text-lg">🦶</span>
+                        <span class="font-bold">Tip-Toe Past</span>
+                    </button>
+                    <button onclick="napPrank('mustache')" class="p-2 bg-purple-950/80 hover:bg-purple-900 border border-purple-500/50 rounded-xl font-comic text-xs text-purple-200 transition active:scale-95 flex flex-col items-center gap-1 shadow">
+                        <span class="text-lg">🥸</span>
+                        <span class="font-bold">Draw Mustache</span>
+                    </button>
+                    <button onclick="napPrank('dropbook')" class="p-2 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/50 rounded-xl font-comic text-xs text-amber-200 transition active:scale-95 flex flex-col items-center gap-1 shadow">
+                        <span class="text-lg">📚</span>
+                        <span class="font-bold">Drop Heavy Book</span>
+                    </button>
+                    <button onclick="napPrank('airhorn')" class="p-2 bg-red-950/80 hover:bg-red-900 border border-red-500/50 rounded-xl font-comic text-xs text-red-200 transition active:scale-95 flex flex-col items-center gap-1 shadow">
+                        <span class="text-lg">📢</span>
+                        <span class="font-bold">Scream "FIRE!"</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 3: Meme / Fridge Mode -->
+        <section id="section-meme" class="mode-section hidden w-full">
+            <div class="w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-3 shadow-xl text-center space-y-3">
+                <div class="bg-red-950/60 border border-red-500/40 p-2.5 rounded-xl">
+                    <h3 class="font-bungee text-red-400 text-sm md:text-base flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-fire animate-bounce"></i> BUTT HEAT INDEX: <span id="heatVal" class="text-amber-300">1000°C</span>
+                    </h3>
+                    <p class="font-comic text-[11px] text-gray-300 mt-1">
+                        Emergency! Sir needs immediate cooling before the entire Lyceum pure maths lab melts!
+                    </p>
+                </div>
+
+                <div class="flex justify-center">
+                    <button onclick="dropFridgeMeme()" class="px-5 py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-comic text-xs md:text-sm font-black rounded-2xl shadow-xl border-2 border-sky-300 active:scale-95 transition flex items-center gap-2">
+                        <span class="text-xl">🧊</span> LAUNCH ICE COLD FRIDGE INTO FIRE!
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 4: Dilum Sankalpa Quote & Tribute -->
+        <section id="section-tribute" class="mode-section hidden w-full">
+            <div class="w-full bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 border border-amber-500/30 rounded-2xl p-4 md:p-6 shadow-2xl text-center relative overflow-hidden">
+                
+                <i class="fa-solid fa-quote-left absolute top-3 left-4 text-amber-500/10 text-7xl pointer-events-none"></i>
+                <i class="fa-solid fa-quote-right absolute bottom-3 right-4 text-amber-500/10 text-7xl pointer-events-none"></i>
+
+                <div class="relative z-10 space-y-4 max-w-2xl mx-auto">
+                    <span class="px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 font-comic text-xs rounded-full inline-flex items-center gap-1.5 uppercase tracking-wider">
+                        <i class="fa-solid fa-heart text-red-500"></i> Honorary Student Tribute
+                    </span>
+
+                    <blockquote class="text-lg md:text-2xl font-serif italic text-amber-100 leading-relaxed drop-shadow-md border-y border-amber-500/20 py-4 my-2">
+                        "Even if he is not the perfect teacher to the world, he is the best teacher to us."
+                    </blockquote>
+
+                    <div class="flex flex-col items-center gap-1">
+                        <p class="font-comic text-sm text-sky-400 font-bold tracking-wide">
+                            — Dilum Sankalpa
+                        </p>
+                        <p class="text-[11px] font-sans text-slate-400">
+                            On behalf of Dilum, Hesitha, Dyan, Mashinsha & the Lyceum Pure Mathematics Class
+                        </p>
+                    </div>
+
+                    <div class="pt-2 flex justify-center gap-2">
+                        <button onclick="speakTributeQuote()" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-sky-600 hover:from-amber-400 text-slate-950 font-comic text-xs font-black rounded-xl shadow active:scale-95 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-play"></i> HEAR SIR READ TRIBUTE 🔊
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="w-full bg-slate-900 border-t border-slate-800 py-2 text-center font-comic text-[11px] text-slate-500 relative z-30">
+        <p>Chandrasiri Sir's Classroom Chaos & Tribute • "Hello hello hello... Bye!"</p>
+    </footer>
+
+    <script>
+        const profilePicSrc = "maths sir.jpg";
+        let userPhotoUrl = null;
+
+        let audioCtx = null;
+        let currentMode = 'chaos';
+        let activeFxType = 'normal';
+        let heatDegrees = 1000;
+        let noiseLevel = 0;
+
+        // Stealth Mechanics
+        let vigilancePercent = 20;
+        let isSirLooking = false;
+        let vigilanceTimer = null;
+
+        // Friend Squad Items (Dilum, Hesitha, Dyan, Mashinsha)
+        const friendList = ["Dilum", "Hesitha", "Dyan", "Mashinsha"];
+        let waterBottleHolderIndex = 0;
+        let chessMovesCount = 1;
+
+        function renderAvatarSlots() {
+            const slots = document.querySelectorAll('.avatar-photo-slot');
+            const targetImg = userPhotoUrl || profilePicSrc;
+
+            slots.forEach(slot => {
+                slot.innerHTML = `
+                    <div class="w-full h-full bg-slate-900 relative flex items-center justify-center border-none overflow-hidden">
+                        <img src="${targetImg}" 
+                             class="w-full h-full object-cover object-center border-none" 
+                             alt="Chandrasiri Sir"
+                             onerror="this.onerror=null; this.src='https://placehold.co/400x400/0f172a/0284c7?text=Chandrasiri+Sir';">
+                    </div>
+                `;
+            });
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    userPhotoUrl = event.target.result;
+                    renderAvatarSlots();
+                    playSound('boing');
+                    speakMale("Custom face loaded! Hello hello hello!");
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function resetPhoto() {
+            userPhotoUrl = null;
+            renderAvatarSlots();
+            playSound('boing');
+            speakMale("Restored profile face!");
+        }
+
+        function updateWobbleSpeed(val) {
+            document.documentElement.style.setProperty('--wag-speed', `${val}s`);
+        }
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+
+            if (type === 'fart' || type === 'whoopee') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(140, now);
+                osc.frequency.linearRampToValueAtTime(50, now + 0.4);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'boing') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(550, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.3);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'whistle') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.45);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.45);
+            } else if (type === 'snore') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(80, now);
+                osc.frequency.linearRampToValueAtTime(125, now + 0.4);
+                osc.frequency.linearRampToValueAtTime(70, now + 0.8);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.8);
+            } else if (type === 'airhorn') {
+                for (let f of [466, 622, 932]) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(f, now);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                }
+            }
+        }
+
+        function speakMale(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            const pitchVal = parseFloat(document.getElementById('voicePitchSlider').value || '0.65');
+            utterance.pitch = pitchVal; 
+            utterance.rate = 0.95;
+
+            const voices = window.speechSynthesis.getVoices();
+            const maleVoice = voices.find(v => v.lang.includes('en') && 
+                (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Mark') || v.name.includes('Natural')));
+            
+            if (maleVoice) utterance.voice = maleVoice;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function speakLegendaryQuote() {
+            const quote = "Hello hello hello this is Chandrasiri Perera from the Lyceum College, my butt is on fire can you put your fridge in the fire bye!";
+            updateMainSpeech(quote);
+            triggerPrank('fire');
+        }
+
+        function speakTributeQuote() {
+            const quote = "Even if he is not the perfect teacher to the world, he is the best teacher to us. Thank you Dilum Sankalpa and class!";
+            updateMainSpeech(quote);
+            triggerWobbleBoing();
+        }
+
+        function speakCurrentQuote() {
+            const currentText = document.getElementById('mainSpeechText').innerText.replace(/"/g, '');
+            speakMale(currentText);
+            triggerWobbleBoing();
+        }
+
+        function triggerWobbleBoing() {
+            playSound('boing');
+            const avatar = document.getElementById('mainAvatar');
+            avatar.classList.add('head-wag-hyper');
+            setTimeout(() => avatar.classList.remove('head-wag-hyper'), 800);
+        }
+
+        function updateMainSpeech(text) {
+            document.getElementById('mainSpeechText').innerText = `"${text}"`;
+            speakMale(text);
+        }
+
+        function switchMode(modeKey) {
+            currentMode = modeKey;
+            document.querySelectorAll('.mode-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`section-${modeKey}`).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn flex-1 py-1.5 px-2 rounded-lg font-comic text-xs font-black transition flex items-center justify-center gap-1 bg-slate-800 text-slate-400 hover:text-white';
+            });
+
+            const activeBtn = document.getElementById(`tab-${modeKey}`);
+            const badge = document.getElementById('modeStatusText');
+
+            if (modeKey === 'chaos') {
+                activeBtn.className = 'tab-btn flex-1 py-1.5 px-2 rounded-lg font-comic text-xs font-black transition flex items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow';
+                badge.innerText = 'STATUS: MATH TEACHING MODE';
+                startVigilanceRadar();
+                updateMainSpeech("Class! Focus on pure mathematics board equations!");
+            } else if (modeKey === 'nap') {
+                activeBtn.className = 'tab-btn flex-1 py-1.5 px-2 rounded-lg font-comic text-xs font-black transition flex items-center justify-center gap-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow';
+                badge.innerText = 'STATUS: POWER NAP ZONE';
+                stopVigilanceRadar();
+                triggerPrank('nap');
+            } else if (modeKey === 'meme') {
+                activeBtn.className = 'tab-btn flex-1 py-1.5 px-2 rounded-lg font-comic text-xs font-black transition flex items-center justify-center gap-1 bg-gradient-to-r from-red-600 to-orange-600 text-white shadow';
+                badge.innerText = 'STATUS: FRIDGE & FLAME ALLEY';
+                stopVigilanceRadar();
+                triggerPrank('fire');
+            } else if (modeKey === 'tribute') {
+                activeBtn.className = 'tab-btn flex-1 py-1.5 px-2 rounded-lg font-comic text-xs font-black transition flex items-center justify-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow';
+                badge.innerText = 'STATUS: DILUM SANKALPA TRIBUTE';
+                stopVigilanceRadar();
+                speakTributeQuote();
+            }
+        }
+
+        function startVigilanceRadar() {
+            if (vigilanceTimer) clearInterval(vigilanceTimer);
+            vigilanceTimer = setInterval(() => {
+                if (currentMode !== 'chaos') return;
+
+                if (isSirLooking) {
+                    vigilancePercent -= 15;
+                    if (vigilancePercent <= 0) {
+                        isSirLooking = false;
+                        document.getElementById('vigilanceText').innerText = "WRITING ON BOARD (SAFE TO ACT)";
+                        document.getElementById('vigilanceText').className = "text-emerald-400 font-bold";
+                        document.getElementById('teachingStateLabel').innerText = "SIR WRITING ON BOARD...";
+                    }
+                } else {
+                    vigilancePercent += Math.floor(Math.random() * 15) + 5;
+                    if (vigilancePercent >= 100) {
+                        isSirLooking = true;
+                        document.getElementById('vigilanceText').innerText = "⚠️ SIR TURNED AROUND! DO NOT MOVE!";
+                        document.getElementById('vigilanceText').className = "text-red-400 font-bold animate-pulse";
+                        document.getElementById('teachingStateLabel').innerText = "⚠️ SIR IS WATCHING CLASS!";
+                        playSound('whistle');
+                    }
+                }
+                document.getElementById('vigilanceBar').style.width = `${Math.min(100, Math.max(0, vigilancePercent))}%`;
+            }, 1200);
+        }
+
+        function stopVigilanceRadar() {
+            if (vigilanceTimer) clearInterval(vigilanceTimer);
+        }
+
+        function checkCaughtInStealth() {
+            if (isSirLooking) {
+                triggerPrank('rage');
+                updateMainSpeech("HEY! Dilum, Hesitha, Dyan, Mashinsha! STOP DISTRACTING CLASS!");
+                return true;
+            }
+            return false;
+        }
+
+        function questStealCloth() {
+            if (checkCaughtInStealth()) return;
+            playSound('boing');
+            document.getElementById('whiteboardClothStatus').innerText = "🧽 Duster: Stolen by Hesitha!";
+            updateMainSpeech("Who stole my duster?! No problem, I pull a fresh replacement duster from my magic lunchbox!");
+            setTimeout(() => {
+                document.getElementById('whiteboardClothStatus').innerText = "🧽 Duster: Replacement Pulled!";
+            }, 1500);
+        }
+
+        function questStealBottle() {
+            if (checkCaughtInStealth()) return;
+            playSound('boing');
+            waterBottleHolderIndex = (waterBottleHolderIndex + 1) % friendList.length;
+            const currentHolder = friendList[waterBottleHolderIndex];
+            document.getElementById('waterBottleStatus').innerText = `🧴 Flask with: ${currentHolder}`;
+            updateMainSpeech(`Passing water bottle under desks! Now with ${currentHolder}!`);
+        }
+
+        function questPlayChess() {
+            if (checkCaughtInStealth()) return;
+            playSound('boing');
+            chessMovesCount++;
+            document.getElementById('chessGameStatus').innerText = `♟️ Chess vs Hesitha & Dyan: Turn ${chessMovesCount}`;
+            updateMainSpeech("Moving knight to E4 under desk while Chandrasiri Sir writes quadratic integration!");
+        }
+
+        function questPaperAirplane() {
+            if (checkCaughtInStealth()) return;
+            playSound('whistle');
+            updateMainSpeech("Mashinsha launched paper airplane across Dyan and Dilum! Direct hit!");
+        }
+
+        function napPrank(action) {
+            const mustache = document.getElementById('mustacheOverlay');
+
+            if (action === 'tiptoe') {
+                playSound('boing');
+                addNoise(15);
+                updateMainSpeech("Tip-toeing past desk... Ssssshh!");
+            } else if (action === 'mustache') {
+                playSound('whistle');
+                mustache.classList.remove('hidden');
+                addNoise(25);
+                updateMainSpeech("Drew mustache on sleeping Chandrasiri Sir!");
+            } else if (action === 'dropbook') {
+                playSound('whoopee');
+                addNoise(45);
+                updateMainSpeech("SLAM! Heavy pure mathematics book dropped!");
+            } else if (action === 'airhorn') {
+                playSound('airhorn');
+                addNoise(100);
+            }
+        }
+
+        function addNoise(amount) {
+            noiseLevel = Math.min(100, noiseLevel + amount);
+            document.getElementById('noiseVal').innerText = `${noiseLevel}% ${noiseLevel >= 100 ? '🚨 WOKE UP!' : ''}`;
+            document.getElementById('noiseBar').style.width = `${noiseLevel}%`;
+
+            if (noiseLevel >= 100) {
+                setTimeout(() => {
+                    triggerPrank('rage');
+                    updateMainSpeech("WHO WOKE ME UP?! MY BUTT IS ON FIRE! DEPLOY FRIDGE!");
+                    noiseLevel = 0;
+                    document.getElementById('noiseBar').style.width = '0%';
+                }, 400);
+            }
+        }
+
+        function dropFridgeMeme() {
+            playSound('boing');
+            heatDegrees = Math.max(0, heatDegrees - 250);
+            document.getElementById('heatVal').innerText = `${heatDegrees}°C`;
+            updateMainSpeech("ICE FRIDGE DROPPED! Butt heat reduced! Hello hello hello!");
+
+            if (heatDegrees <= 0) {
+                updateMainSpeech("FIRE EXTINGUISHED! THANK YOU DILUM, HESITHA, DYAN & MASHINSHA! BYE!");
+                heatDegrees = 1000;
+            }
+        }
+
+        function triggerPrank(type) {
+            const avatar = document.getElementById('mainAvatar');
+            const fridgeSlot = document.getElementById('fridgeDropSlot');
+            const mustache = document.getElementById('mustacheOverlay');
+
+            mustache.classList.add('hidden');
+            fridgeSlot.classList.add('hidden');
+            avatar.className = "head-wag-medium w-28 h-28 md:w-32 md:h-32 clean-avatar-frame bg-slate-900 relative z-20 cursor-pointer flex items-center justify-center transition-all duration-300 overflow-hidden";
+            activeFxType = 'normal';
+
+            if (type === 'fire') {
+                activeFxType = 'fire';
+                playSound('whistle');
+                avatar.className = "head-wag-hyper w-28 h-28 md:w-32 md:h-32 clean-avatar-frame glow-fire bg-red-950 relative z-20 cursor-pointer flex items-center justify-center transition-all duration-300 overflow-hidden";
+                document.getElementById('mouthLayer').innerHTML = '<span>😱</span>';
+            } else if (type === 'nap') {
+                activeFxType = 'nap';
+                playSound('snore');
+                avatar.className = "head-nap w-28 h-28 md:w-32 md:h-32 clean-avatar-frame glow-sleep bg-slate-950 relative z-20 cursor-pointer flex items-center justify-center transition-all duration-300 overflow-hidden";
+                document.getElementById('mouthLayer').innerHTML = '<span>😴</span>';
+                updateMainSpeech("Snööööre... 1 + 1 = Zzz... put fridge in fire... zzz...");
+            } else if (type === 'rage') {
+                activeFxType = 'fire';
+                playSound('airhorn');
+                avatar.className = "head-wag-hyper rage-shake w-28 h-28 md:w-32 md:h-32 clean-avatar-frame glow-rage bg-red-950 relative z-20 cursor-pointer flex items-center justify-center transition-all duration-300 overflow-hidden";
+                document.getElementById('mouthLayer').innerHTML = '<span>🤬</span>';
+            }
+        }
+
+        // Particle System Canvas
+        const canvas = document.getElementById('fxCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class FXParticle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 20;
+                this.size = Math.random() * 8 + 3;
+                this.speedY = Math.random() * 2 + 1;
+                this.opacity = Math.random() * 0.7 + 0.3;
+            }
+            update() {
+                this.y -= this.speedY;
+                this.opacity -= 0.006;
+                if (this.opacity <= 0 || this.y < -20) this.reset();
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                if (activeFxType === 'fire') {
+                    ctx.fillStyle = Math.random() > 0.5 ? '#ef4444' : '#f59e0b';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (activeFxType === 'ice') {
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 0.8, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        for (let i = 0; i < 25; i++) particles.push(new FXParticle());
+
+        function animateFX() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateFX);
+        }
+
+        window.onload = function() {
+            renderAvatarSlots();
+            animateFX();
+            startVigilanceRadar();
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+            }
+        };
+    </script>
+</body>
+</html>
